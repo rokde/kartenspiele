@@ -58,16 +58,17 @@ function renderAnnouncement(state) {
   return vorhand + `<div class="announce__buttons" role="group" aria-label="Spiel ansagen">${buttons}</div>`;
 }
 
-const OUTCOMES = { win: "Gewonnen!", loss: "Verloren", draw: "Unentschieden" };
+const OUTCOMES = { win: "Gewonnen!", loss: "Verloren" };
 
 // The button names the result text, so a screen reader reads it with the focus. Newest game first.
 function renderResult(state) {
   const { human, computer } = rules.points(state);
-  const outcome = human > 60 ? "win" : human < 60 ? "loss" : "draw";
+  const outcome = rules.winner(state) === "human" ? "win" : "loss";
   const rows = state.scores.map((s) => `<li>Du ${s.human} : ${s.computer} Computer</li>`).reverse().join("");
   return `<section class="result" aria-label="Ergebnis">` +
     `<p class="result__outcome result__outcome--${outcome}" id="result-outcome">${OUTCOMES[outcome]}</p>` +
     `<p class="result__points" id="result-points">Du ${human} Punkte, Computer ${computer} Punkte</p>` +
+    `<p class="result__announcer">Ansager: ${PLAYER_NAMES[state.vorhand]}</p>` +
     `<button type="button" class="game-button" data-action="next" aria-describedby="result-outcome result-points">Nächstes Spiel</button>` +
     `<h3 class="result__title">Spielliste</h3><ol class="result__scores" reversed>${rows}</ol>` +
     `</section>`;

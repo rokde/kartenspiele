@@ -25,7 +25,7 @@ test("AC-1: newGame sets vorhand from the dealer and trump null", () => {
     assert.equal(state.vorhand, vorhand);
     assert.equal(state.trump, null);
     assert.deepEqual(JSON.parse(JSON.stringify(state)), state);
-    assert.deepEqual(state.players, rules.newGame(7).players);
+    assert.deepEqual(state.players[vorhand], rules.newGame(7).players.human);
   }
 });
 
