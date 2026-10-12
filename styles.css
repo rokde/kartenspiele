@@ -22,7 +22,8 @@ body {
 main {
   max-width: 60rem;
   margin: 0 auto;
-  padding: 1rem;
+  /* Room at the bottom, so that the fixed mute button does not cover content. */
+  padding: 1rem 1rem 4.5rem;
 }
 
 h1 {
@@ -122,6 +123,66 @@ h1 {
 .back-button:focus-visible {
   outline: 3px solid var(--gold);
   outline-offset: 3px;
+}
+
+.menu-extra {
+  text-align: center;
+  margin-top: 1.5rem;
+}
+
+.mute-button {
+  position: fixed;
+  right: 0.75rem;
+  bottom: 0.75rem;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 2.75rem;
+  min-height: 2.75rem;
+  padding: 0.5rem 0.9rem;
+  font: inherit;
+  font-weight: 700;
+  color: var(--text);
+  background: var(--card-bg);
+  border: 2px solid var(--brown);
+  border-radius: 999px;
+  box-shadow: 0 3px 6px rgb(59 36 20 / 0.25);
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+.mute-button:hover {
+  transform: scale(1.05);
+}
+
+.mute-button:focus-visible {
+  outline: 3px solid var(--gold);
+  outline-offset: 3px;
+}
+
+.mute-button[aria-pressed="true"] {
+  background: #f3dfc0;
+}
+
+.credits h2 {
+  text-align: center;
+  color: var(--red);
+}
+
+.credits ul {
+  padding-left: 1.25rem;
+  line-height: 1.6;
+}
+
+.credits a {
+  color: var(--red);
+  font-weight: 700;
+}
+
+.credits a:focus-visible {
+  outline: 3px solid var(--gold);
+  outline-offset: 2px;
 }
 
 .screen-bar {
@@ -404,7 +465,7 @@ h1 {
 /* Phone: the trick area fills the lower half, and the cards get the full width. */
 @media (max-width: 30rem) {
   main {
-    padding: 0.5rem;
+    padding: 0.5rem 0.5rem 4.5rem;
   }
 
   .row {
@@ -437,7 +498,8 @@ h1 {
   .card,
   .game-button,
   .back-button,
-  .announce-button {
+  .announce-button,
+  .mute-button {
     transition: none;
   }
 
@@ -449,7 +511,8 @@ h1 {
   .back-button:hover,
   .back-button:active,
   .announce-button:hover,
-  .announce-button:active {
+  .announce-button:active,
+  .mute-button:hover {
     transform: none;
   }
 }

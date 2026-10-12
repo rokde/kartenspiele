@@ -21,6 +21,17 @@ export const restart = (state, seed) => newGame(seed, state.dealer === "human" ?
 
 export const nextGame = (state, seed) => announceForComputer(rules.nextGame(state, seed));
 
+const playedCount = (state) => state.tricks.length * 2 + state.trick.length;
+
+// The sound events for one state change. A null prev means a new game.
+export function soundEvents(prev, next) {
+  const fresh = !prev || rules.isOver(prev);
+  if (fresh) return playedCount(next) === 0 ? ["deal"] : [];
+  const events = Array(Math.max(0, playedCount(next) - playedCount(prev))).fill("play");
+  if (rules.isOver(next)) events.push(rules.winner(next) === "human" ? "win" : "lose");
+  return events;
+}
+
 const PLAYER_NAMES = { human: "Du", computer: "Computer" };
 
 function renderStack(stack, i, legal) {
