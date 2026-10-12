@@ -71,13 +71,80 @@ h1 {
 .card--rot { color: var(--rot); }
 .card--schellen { color: var(--schellen); }
 
+.menu {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.game-button,
+.back-button {
+  font: inherit;
+  font-weight: 700;
+  color: var(--card-bg);
+  background: var(--rot);
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+  box-shadow: 0 4px 0 #7d1a15;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.game-button {
+  width: min(100%, 20rem);
+  padding: 1.25rem 2rem;
+  font-size: 1.5rem;
+}
+
+.back-button {
+  padding: 0.6rem 1.25rem;
+  font-size: 1rem;
+  background: var(--eichel);
+  box-shadow: 0 3px 0 #4a2c0a;
+}
+
+.game-button:hover,
+.back-button:hover {
+  transform: translateY(-2px) rotate(-1deg);
+}
+
+.game-button:active,
+.back-button:active {
+  transform: translateY(2px);
+  box-shadow: none;
+}
+
+.game-button:focus-visible,
+.back-button:focus-visible {
+  outline: 3px solid var(--schellen);
+  outline-offset: 3px;
+}
+
+.game-screen h2 {
+  text-align: center;
+  color: var(--rot);
+}
+
+.note {
+  text-align: center;
+  font-style: italic;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .card {
+  .card,
+  .game-button,
+  .back-button {
     transition: none;
   }
 
   .card:hover,
-  .card:active {
+  .card:active,
+  .game-button:hover,
+  .game-button:active,
+  .back-button:hover,
+  .back-button:active {
     transform: none;
   }
 }
