@@ -49,20 +49,22 @@ test("AC-3: applyMove rejects an unknown game, an unknown type, and a second ann
 });
 
 test("AC-4: aiMove selects the suit with the most cards and ignores the Buben", () => {
-  const state = stateWith(["herz:7", "herz:8", "herz:9", "kreuz:A", "kreuz:10", "pik:B", "pik:B", "pik:B"]);
+  const state = stateWith(["herz:7", "herz:8", "herz:9", "kreuz:A", "kreuz:10", "pik:B", "pik:7", "pik:8"]);
   assert.deepEqual(aiMove(state), { type: "announce", game: "herz" });
 });
 
 test("AC-4: aiMove breaks a count tie with the card points", () => {
-  const state = stateWith(["kreuz:7", "kreuz:8", "karo:A", "karo:9", "pik:K", "herz:D", "herz:B", "kreuz:B"]);
+  const state = stateWith(["kreuz:7", "kreuz:8", "karo:A", "karo:9", "pik:K", "herz:D", "herz:B", "pik:7"]);
   assert.deepEqual(aiMove(state), { type: "announce", game: "karo" });
 });
 
-test("AC-4: aiMove breaks a second tie with the SUITS order and never selects grand", () => {
-  const state = stateWith(["herz:A", "herz:7", "pik:A", "pik:8", "karo:B", "kreuz:B", "herz:B", "pik:B"]);
+test("AC-4: aiMove breaks a second tie with the SUITS order, and selects grand only with 2 or more Buben", () => {
+  const state = stateWith(["herz:A", "herz:7", "pik:A", "pik:8", "karo:B", "kreuz:9", "karo:9", "kreuz:7"]);
   assert.deepEqual(aiMove(state), { type: "announce", game: "pik" });
   for (let seed = 0; seed < 200; seed++) {
-    assert.notEqual(aiMove(rules.newGame(seed)).game, "grand");
+    const state = rules.newGame(seed, "human");
+    const buben = state.players.computer.stacks.filter((s) => s.up?.rank === "B").length;
+    assert.equal(aiMove(state).game === "grand", buben >= 2);
   }
 });
 

@@ -92,7 +92,7 @@ test("AC-6: announce buttons, trump badge, and the AI skips the Buben", () => {
   const herz = game.render(game.applyMove(game.newGame(2, "computer"), { type: "announce", game: "herz" }));
   assert.match(herz, /Trumpf: Herz</);
   const state = rules.newGame(1, "human");
-  const ups = ["kreuz:B", "pik:B", "herz:B", "karo:7"];
+  const ups = ["kreuz:B", "kreuz:7", "karo:7", "karo:8"];
   const stacks = ups.map((up) => ({ down: c("herz:7"), up: c(up) }));
   const withBuben = { ...state, players: { ...state.players, computer: { stacks } } };
   assert.deepEqual(aiMove(withBuben), { type: "announce", game: "karo" });

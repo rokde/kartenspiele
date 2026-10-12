@@ -76,16 +76,15 @@ test("AC-4: the second card resolves the trick for the trickWinner", () => {
   }
 });
 
-test("AC-5: aiMove plays a random legal stack after the announcement", () => {
+test("AC-5: aiMove plays a legal stack after the announcement", () => {
   let state = announced(8, "computer");
   state = withStacks(state, "human", ["herz:A", "herz:7", "herz:8", "herz:9", "herz:K", "herz:D", "herz:10", "pik:7"]);
   state = withStacks(state, "computer", ["pik:A", "kreuz:8", "kreuz:K", "pik:9", "karo:10", "pik:D", "kreuz:9", "herz:8"]);
   state = { ...state, turn: "human" };
   state = rules.applyMove(state, { type: "play", stack: 7 });
   assert.deepEqual(legal(state), [0, 3, 5]);
-  assert.deepEqual(aiMove(state, () => 0), { type: "play", stack: 0 });
-  assert.deepEqual(aiMove(state, () => 0.999), { type: "play", stack: 5 });
-  for (let i = 0; i < 20; i++) assert.ok(legal(state).includes(aiMove(state).stack));
+  // The human leads pik:7 (0 points), so the computer gives its lowest legal card.
+  assert.deepEqual(aiMove(state), { type: "play", stack: 3 });
   assert.equal(aiMove(rules.newGame(8, "human")).type, "announce");
 });
 
