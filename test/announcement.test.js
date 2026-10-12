@@ -11,7 +11,7 @@ const count = (html, text) => html.split(text).length - 1;
 
 // Fixed computer hand: each string is "suit:rank" of one face-up card.
 function stateWith(ups) {
-  const state = rules.newGame(1, "computer");
+  const state = rules.newGame(1, "human");
   const stacks = ups.map((up) => {
     const [suit, rank] = up.split(":");
     return { down: { suit: "rot", rank: "7" }, up: { suit, rank } };
@@ -19,22 +19,19 @@ function stateWith(ups) {
   return { ...state, players: { ...state.players, computer: { stacks } } };
 }
 
-test("AC-1: newGame sets vorhand and trump null, the seed parity is the default", () => {
-  for (const vorhand of ["human", "computer"]) {
-    const state = rules.newGame(7, vorhand);
+test("AC-1: newGame sets vorhand from the dealer and trump null", () => {
+  for (const [dealer, vorhand] of [["computer", "human"], ["human", "computer"]]) {
+    const state = rules.newGame(7, dealer);
     assert.equal(state.vorhand, vorhand);
     assert.equal(state.trump, null);
     assert.deepEqual(JSON.parse(JSON.stringify(state)), state);
     assert.deepEqual(state.players, rules.newGame(7).players);
   }
-  assert.equal(rules.newGame(4).vorhand, "human");
-  assert.equal(rules.newGame(0).vorhand, "human");
-  assert.equal(rules.newGame(9).vorhand, "computer");
 });
 
 test("AC-2: announce sets trump and does not change the input state", () => {
   for (const g of GAMES) {
-    const state = rules.newGame(3, "human");
+    const state = rules.newGame(3, "computer");
     const before = structuredClone(state);
     const next = rules.applyMove(state, { type: "announce", game: g });
     assert.equal(next.trump, g);
@@ -43,7 +40,7 @@ test("AC-2: announce sets trump and does not change the input state", () => {
 });
 
 test("AC-3: applyMove rejects an unknown game, an unknown type, and a second announcement", () => {
-  const state = rules.newGame(3, "human");
+  const state = rules.newGame(3, "computer");
   assert.throws(() => rules.applyMove(state, { type: "announce", game: "null" }));
   assert.throws(() => rules.applyMove(state, { type: "announce" }));
   assert.throws(() => rules.applyMove(state, { type: "play", game: "rot" }));
@@ -71,23 +68,23 @@ test("AC-4: aiMove breaks a second tie with the SUITS order and never selects gr
 
 test("AC-5: the module newGame announces for the computer, not for the human", () => {
   for (const seed of [1, 2, 3, 42]) {
-    assert.equal(game.newGame(seed, "computer").trump, aiMove(rules.newGame(seed, "computer")).game);
-    assert.equal(game.newGame(seed, "human").trump, null);
+    assert.equal(game.newGame(seed, "human").trump, aiMove(rules.newGame(seed, "human")).game);
+    assert.equal(game.newGame(seed, "computer").trump, null);
   }
 });
 
 test("AC-6: render shows the 5 announce buttons only when the human must announce", () => {
-  const state = game.newGame(2, "human");
+  const state = game.newGame(2, "computer");
   const buttons = announceButtons(game.render(state));
   assert.deepEqual(buttons.map((m) => m[1]), GAMES);
   assert.deepEqual(buttons.map((m) => m[2].replace(/<span[^>]*>.*?<\/span>\s*/, "")), LABELS);
   assert.equal(announceButtons(game.render(game.applyMove(state, { type: "announce", game: "rot" }))).length, 0);
-  assert.equal(announceButtons(game.render(game.newGame(2, "computer"))).length, 0);
-  assert.equal(announceButtons(game.render({ ...game.newGame(2, "computer"), trump: null })).length, 0);
+  assert.equal(announceButtons(game.render(game.newGame(2, "human"))).length, 0);
+  assert.equal(announceButtons(game.render({ ...game.newGame(2, "human"), trump: null })).length, 0);
 });
 
 test("AC-7: render shows Vorhand, the trump name, and all cards", () => {
-  const human = game.newGame(2, "human");
+  const human = game.newGame(2, "computer");
   assert.ok(game.render(human).includes("Vorhand: Du"));
   assert.ok(!game.render(human).includes("Trumpf: "));
   for (const [i, g] of GAMES.entries()) {
@@ -97,7 +94,7 @@ test("AC-7: render shows Vorhand, the trump name, and all cards", () => {
     assert.equal(count(html, 'class="card card--'), 16);
     assert.equal(count(html, 'aria-label="Verdeckte Karte"'), 16);
   }
-  const computer = game.render(game.newGame(2, "computer"));
+  const computer = game.render(game.newGame(2, "human"));
   assert.ok(computer.includes("Vorhand: Computer"));
   assert.match(computer, /Trumpf: (Eichel|Grün|Rot|Schellen)</);
 });

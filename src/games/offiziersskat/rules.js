@@ -4,18 +4,32 @@ export const GAMES = [...SUITS, "grand"];
 export const CARD_POINTS = { A: 11, 10: 10, K: 4, O: 3, U: 2, 9: 0, 8: 0, 7: 0 };
 
 // Fixed deal: cards 0-15 go to the human, 16-31 to the computer, two cards for each stack.
-// shortcut: the seed parity selects Vorhand, change it when S8 adds the dealer.
-export function newGame(seed, vorhand = seed % 2 === 0 ? "human" : "computer") {
+// The non-dealer is Vorhand.
+export function newGame(seed, dealer = "computer", scores = []) {
+  const vorhand = other(dealer);
   const cards = shuffle(createDeck(), seed);
   const stacks = (from) =>
     Array.from({ length: 8 }, (_, i) => ({ down: cards[from + 2 * i], up: cards[from + 2 * i + 1] }));
   return {
-    seed, vorhand, trump: null, turn: vorhand, trick: [], tricks: [],
+    seed, dealer, vorhand, scores, trump: null, turn: vorhand, trick: [], tricks: [],
     players: { human: { stacks: stacks(0) }, computer: { stacks: stacks(16) } },
   };
 }
 
 export const isOver = (state) => state.tricks.length === 16;
+
+const other = (player) => (player === "human" ? "computer" : "human");
+
+export function nextGame(state, seed) {
+  if (!isOver(state)) throw new Error("The game is not over");
+  return newGame(seed, other(state.dealer), state.scores);
+}
+
+export function points(state) {
+  const sum = { human: 0, computer: 0 };
+  for (const { winner, cards } of state.tricks) for (const { card } of cards) sum[winner] += CARD_POINTS[card.rank];
+  return sum;
+}
 
 export function applyMove(state, move) {
   if (move.type === "play") return play(state, move.stack);
@@ -38,9 +52,10 @@ function play(state, index) {
   const { card, stacks } = playFromStack(state.players[player].stacks, index);
   const players = { ...state.players, [player]: { stacks } };
   const trick = [...state.trick, { player, card }];
-  if (trick.length < 2) return { ...state, players, trick, turn: player === "human" ? "computer" : "human" };
+  if (trick.length < 2) return { ...state, players, trick, turn: other(player) };
   const winner = trick[trickWinner(trick[0].card, trick[1].card, state.trump) === "lead" ? 0 : 1].player;
-  return { ...state, players, trick: [], tricks: [...state.tricks, { winner, cards: trick }], turn: winner };
+  const next = { ...state, players, trick: [], tricks: [...state.tricks, { winner, cards: trick }], turn: winner };
+  return isOver(next) ? { ...next, scores: [...state.scores, points(next)] } : next;
 }
 
 const ORDER = ["7", "8", "9", "O", "K", "10", "A"];

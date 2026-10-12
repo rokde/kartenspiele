@@ -15,9 +15,10 @@ if (typeof document !== "undefined") {
   let game;
   let state;
   let timer;
+  const seed = () => crypto.getRandomValues(new Uint32Array(1))[0];
   const showGame = () => {
     show(renderGameScreen(game, state));
-    (app.querySelector("[data-announce], [data-stack]") ?? app.querySelector(".status"))?.focus();
+    (app.querySelector("[data-announce], [data-stack], [data-action=next]") ?? app.querySelector(".status"))?.focus();
     // A short pause, so that the human can see each computer card.
     if (state.trump !== null && state.turn === "computer" && !game.isOver(state)) {
       timer = setTimeout(() => {
@@ -35,7 +36,10 @@ if (typeof document !== "undefined") {
       show(menuHtml());
     } else if (button.dataset.gameId) {
       game = getGame(button.dataset.gameId);
-      state = game.newGame(crypto.getRandomValues(new Uint32Array(1))[0]);
+      state = game.newGame(seed());
+      showGame();
+    } else if (button.dataset.action === "next") {
+      state = game.nextGame(state, seed());
       showGame();
     } else if (button.dataset.announce) {
       state = game.applyMove(state, { type: "announce", game: button.dataset.announce });
