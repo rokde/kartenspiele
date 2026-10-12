@@ -1,0 +1,7 @@
+# >>> software factory (managed by /factory:init)
+factory/board.json
+factory/jobs/
+factory/dashboard.html
+factory/audit.md
+.claude/worktrees/
+# <<< software factory
