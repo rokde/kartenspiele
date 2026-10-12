@@ -51,3 +51,6 @@ Planned order: first the whole-repo audit (its Must fix findings), then the 2-br
 > die sounds müssen passend zur Animation gespielt werden. Also wenn die Animation vorbei ist, muss der sound auch aufhören. Und manchmal muss der Sound kurz vor der Animation starten, wenn wir noch eine Pause vor dem Ton haben. Also am besten die audio files noch croppen, dass sie sofort mit ton zur Animation starten. kannst du das mit playwright prüfen?
 
 Coordinator measurements (decoded in Chromium, threshold 5 % of peak): card-play.mp3 0.97 s, sound from 0.35 s to 0.74 s (fly animation is 0.3 s, so the sound comes after the card lands); shuffle.mp3 5.2 s, sound 0.1–3.5 s in two bursts (deal animation lasts about 0.92 s for the first deal and 1.42 s for the rest deal); win.mp3 3.36 s, sound 0.06–2.6 s; lose.mp3 1.15 s, sound 0.05–1.0 s. All play sounds of one move fire at once, but the cards fly one after another (0.3 s apart). No ffmpeg on this machine.
+
+## Feedback 6 (2026-10-12)
+"Können wir das Layout der Karten auf maximal 4 Kartenstapel in der Breite machen? Besonders auf dem Handy ist das ein Layoutgewinn. Dann hat man größere Karten. Und die Spielliste sollte auch enden können. Mit einem Neuen Spiel könnte man diese Liste auch resetten."
