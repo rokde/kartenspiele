@@ -33,3 +33,9 @@ Cards: the linked `Svg-cards-2.0.svg` (David Bellot, LGPL-2.1+, 924 KB, https://
 Animation: deal from a central stack, card flies to the trick area, after the trick the cards sweep toward the winner's side onto a growing won-tricks pile per player; the trick clears automatically after a few seconds or when the next card is played. Respect `prefers-reduced-motion` (skip/shorten motion, keep state changes). Sound: one shared core sound module for all games, with a visible mute toggle (remembered in `localStorage`) and no sound before the first user gesture (autoplay rules).
 
 The remaining backlog S9 (save/resume), S10 (better computer), S11 (rules page) still stands; order the new work before or between them as fits best.
+
+## Feedback 3 (2026-10-12)
+
+> vielleicht können wir das nehmen? https://cardmeister.github.io/
+
+Coordinator notes: CardMeister `<playing-card>` web component, Unlicense (public domain), one self-contained JS file, no network calls (checked), 52 French cards incl. court images and card back; `letters=ABDK` gives German index letters (B, D, K, A). Replaces the Bellot SVG extraction in S13 (no LGPL handling needed). Sample render checked in a browser: Buben, Herz 7–A and card back look right.
