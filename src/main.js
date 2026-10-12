@@ -6,7 +6,19 @@ import { createMotion, domView } from "./core/motion.js";
 
 export const APP_TITLE = "Karten";
 
-if (typeof document !== "undefined") {
+// Reading localStorage throws when the browser blocks it. Then the game runs without a save.
+const browserStorage = () => { try { return localStorage; } catch { return null; } };
+
+// The app controller. Tests give fakes for the browser globals.
+export function startApp({
+  document = globalThis.document,
+  storage: store = browserStorage(),
+  setTimeout = globalThis.setTimeout,
+  clearTimeout = globalThis.clearTimeout,
+  addEventListener = globalThis.addEventListener,
+  reducedMotion = matchMedia("(prefers-reduced-motion: reduce)").matches,
+  seed = () => crypto.getRandomValues(new Uint32Array(1))[0],
+} = {}) {
   const app = document.getElementById("app");
   const show = (html) => {
     app.innerHTML = html;
@@ -23,10 +35,7 @@ if (typeof document !== "undefined") {
   let runs = 0;
   // True while the rules page shows on top of the running game.
   let rulesFromGame = false;
-  const motion = createMotion({ reduced: matchMedia("(prefers-reduced-motion: reduce)").matches });
-  const seed = () => crypto.getRandomValues(new Uint32Array(1))[0];
-  // Reading localStorage throws when the browser blocks it. Then the game runs without a save.
-  const store = (() => { try { return localStorage; } catch { return null; } })();
+  const motion = createMotion({ reduced: reducedMotion, setTimeout, clearTimeout });
   const saved = (g) => g.restore(load(store, g.id));
   const sound = createSound(store);
   for (const type of ["pointerdown", "keydown", "click"]) document.addEventListener(type, sound.unlock, { capture: true });
@@ -72,6 +81,13 @@ if (typeof document !== "undefined") {
     if (run === runs) computerTurn();
   };
 
+  // The player leaves the game screen. No old timer or run may change the game later.
+  const leave = () => {
+    clearTimeout(timer);
+    motion.cancel();
+    runs++;
+  };
+
   app.addEventListener("click", (event) => {
     const button = event.target.closest("button");
     if (!button) return;
@@ -79,12 +95,10 @@ if (typeof document !== "undefined") {
       rulesFromGame = false;
       showGame();
     } else if (button.dataset.action === "back") {
-      clearTimeout(timer);
-      runs++;
+      leave();
       show(menuHtml());
     } else if (button.dataset.action === "rules") {
-      clearTimeout(timer);
-      runs++;
+      leave();
       rulesFromGame = true;
       show(renderRules(game));
     } else if (button.dataset.rules) {
@@ -112,8 +126,7 @@ if (typeof document !== "undefined") {
   // Another tab changed the save. This tab stops and shows the menu, so it never writes an old state.
   addEventListener("storage", (event) => {
     if (!game || !isSaveOf(event, game.id) || !(rulesFromGame || app.querySelector(".game-screen"))) return;
-    clearTimeout(timer);
-    runs++;
+    leave();
     rulesFromGame = false;
     show(menuHtml(`<p class="status" role="status">Das Spiel wurde in einem anderen Tab weitergespielt.</p>`));
   });
@@ -125,3 +138,5 @@ if (typeof document !== "undefined") {
   cleared = true;
   if (game) showGame();
 }
+
+if (typeof document !== "undefined") startApp();

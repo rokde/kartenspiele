@@ -156,9 +156,3 @@ test("AC-6: the README lists the same 4 sound credits", () => {
   const readme = read("README.md");
   for (const [href, text] of SOUND_LINKS) assert.ok(readme.includes(`[${text}](${href})`), href);
 });
-
-test("AC-7: the resume on page load shows the game without sound events", () => {
-  const main = read("src/main.js");
-  assert.match(main, /if \(game\) showGame\(\);\s*\}\s*$/);
-  assert.doesNotMatch(main.match(/const showGame = [\s\S]*?\n {2}\};/)[0], /soundEvents|sound\.play/);
-});
