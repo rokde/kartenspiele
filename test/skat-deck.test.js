@@ -62,8 +62,8 @@ test("AC-4: with the playing-card element defined, cards use CardMeister", (t) =
     assert.match(html, new RegExp(`^<div [^>]*role="img" aria-label="${cardName(card)}">` +
       `<playing-card cid="${cid(card)}" letters="ABDK" aria-hidden="true">`));
   }
-  const back = renderCardBack();
-  assert.match(back, /^<div [^>]*role="img" aria-label="Verdeckte Karte"><playing-card rank="0" aria-hidden="true">/);
+  // S15: the back stays the CSS back, also with CardMeister.
+  assert.equal(renderCardBack(), `<div class="card-back" role="img" aria-label="Verdeckte Karte"></div>`);
 });
 
 test("AC-5: without customElements, cards fall back to symbols and the CSS back", () => {

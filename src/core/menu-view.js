@@ -29,8 +29,8 @@ export function renderCredits() {
     `<h3>Töne</h3><ul>${sounds}</ul></section>`;
 }
 
-export function renderGameScreen(game, state) {
+export function renderGameScreen(game, state, options) {
   return `<div class="screen-bar"><button type="button" class="back-button" data-action="back">Zurück</button>` +
     `<button type="button" class="back-button" data-action="new">Neues Spiel</button></div>` +
-    `<section class="game-screen">${game.render(state)}</section>`;
+    `<section class="game-screen">${game.render(state, options)}</section>`;
 }

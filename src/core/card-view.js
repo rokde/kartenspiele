@@ -21,11 +21,8 @@ export function renderCard(card) {
     `</div>`;
 }
 
+// The CSS back for all cards. The CardMeister back is low contrast on a phone.
 export function renderCardBack() {
-  if (hasImages()) {
-    return `<div class="card-back card-back--image" role="img" aria-label="Verdeckte Karte">` +
-      `<playing-card rank="0" aria-hidden="true"></playing-card></div>`;
-  }
   return `<div class="card-back" role="img" aria-label="Verdeckte Karte"></div>`;
 }
 
