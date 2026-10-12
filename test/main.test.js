@@ -27,7 +27,7 @@ test("README.md gives the start and test commands", () => {
   assert.ok(readme.includes("node --test"));
 });
 
-test("python3 -m http.server serves / and /src/main.js", async (t) => {
+test("python3 -m http.server serves / and /src/main.js", { timeout: 10000 }, async (t) => {
   // Port 0 lets the OS select a free port; the test reads it from the server log.
   const server = spawn("python3", ["-u", "-m", "http.server", "0", "--bind", "127.0.0.1"], {
     cwd: root,
