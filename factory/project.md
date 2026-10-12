@@ -18,7 +18,8 @@ refreshes it after each merge.
 - Jira: none
 
 ## Conventions
-none yet (new repo, no commits with code)
+- UI: responsive design (mobile phone portrait up to desktop; table and cards must fit and be tappable on a small screen). Make it pretty and a bit playful: warm colors, friendly rounded shapes, small lively touches (hover/tap feedback, gentle transitions), while keeping it readable and accessible (contrast, focus states, `prefers-reduced-motion`).
+- UI language: German.
 
 ## Factory rules
 - Product code never goes into `factory/` or `.claude/`.
