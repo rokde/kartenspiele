@@ -33,7 +33,8 @@ Jede Farbe hat 7, 8, 9, 10, Bube, Dame, König und Ass.</p>
 <h2>Trumpf</h2>
 <ul>
 <li>Die vier Buben sind immer Trumpf: Kreuz-Bube, Pik-Bube, Herz-Bube, Karo-Bube (vom höchsten zum niedrigsten).</li>
-<li>Im Farbspiel ist auch die angesagte Farbe Trumpf: unter den Buben folgen Ass, 10, König, Dame, 9, 8, 7.</li>
+<li>Die Buben gehören immer zum Trumpf, nicht zu ihrer Farbe.</li>
+<li>Im Farbspiel ist auch die angesagte Farbe Trumpf: nach den Buben folgen Ass, 10, König, Dame, 9, 8, 7.</li>
 <li>Im Grand sind nur die Buben Trumpf.</li>
 <li>In jeder anderen Farbe gilt: Ass, 10, König, Dame, 9, 8, 7.</li>
 </ul>
