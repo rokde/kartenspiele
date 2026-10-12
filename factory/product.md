@@ -1,7 +1,7 @@
 # Product: Karten
 
 ## Goal
-One player gets a card game site that runs only in the browser. The player plays Offiziersskat against a computer with the Wikipedia rules, a Skat deck, light animations, and sound. The site has a game registry so that we can add more games later.
+One player gets a card game site that runs only in the browser. The player plays Offiziersskat against a computer, or against a friend in a second browser through a short room code. The game uses the Wikipedia rules, a Skat deck, light animations, and sound, and a game registry lets us add more games later.
 
 ## Scope
 - In: one static web app (HTML, CSS, JavaScript modules). No server code.
@@ -12,15 +12,23 @@ One player gets a card game site that runs only in the browser. The player plays
 - In: a computer opponent that plays only legal cards and uses simple rules of thumb.
 - In: light animations. The cards fly from a central stack when the game deals. A played card flies to the trick. The trick moves to the pile of the winner. Each player has a pile of won tricks that grows. The trick clears after 2.5 seconds, or immediately when the next card is played. With `prefers-reduced-motion`, the app skips the motion and keeps the state changes.
 - In: one shared sound module for all games: card play, shuffle/deal, win, loss. A visible mute button. The app keeps the mute setting in `localStorage`. The app plays no sound before the first user gesture.
-- In: credits in the app and in the README for the card faces (CardMeister, Unlicense) and the 4 sounds (Pixabay attributions from the idea).
-- In: save in `localStorage`. The current game and the score list stay after a page reload.
-- Out: multiplayer and peer-to-peer (WebRTC) (the idea says "later"; WebRTC also needs a signaling path, so it is a separate plan).
+- In: credits in the app and in the README for the card faces (CardMeister, Unlicense), the 4 sounds (Pixabay attributions from the idea), and PeerJS (MIT).
+- In: save in `localStorage`. The current game against the computer and its score list stay after a page reload.
+- In (Feedback 4): Offiziersskat with 2 humans in 2 browsers. Player 1 opens a room and gets a short code (for example `KREUZ-42`). Player 2 types the code. The public PeerJS broker (`0.peerjs.com`) only sets up the connection. The game data then goes directly browser to browser over a WebRTC data channel.
+- In: the host browser holds the game state and checks each move with `rules.js`. The guest sends moves only. The guest gets a view without the face-down cards and without the stock, so devtools do not show hidden cards.
+- In: a clear German message when the room code is unknown, the broker is not reachable, or the other player leaves. The player can go back to the menu.
+- Out: the whole-repo audit from Feedback 4 (it is a separate audit job; its "Must fix" findings run as jobs before S16).
+- Out: an own signaling server or TURN server (the human accepted the public PeerJS broker; PeerJS default STUN/TURN is enough for a first version).
+- Out: reconnect after a page reload or a lost connection, and saving an online game (one session is enough; the host can open a new room).
+- Out: more than 2 players, spectators, chat, matchmaking, a list of open rooms (the code is the only way to meet).
+- Out: online play for other games (no other game exists yet; the link layer in `src/core/` makes it possible later).
+- Out: protection against a modified host (friendly games between people who know each other).
 - Out: more games than Offiziersskat (the registry makes them possible; add them as new slices later).
 - Out: Null game, Kontra/Re, game values, Buben-Spitzen, Schneider/Schwarz, Ramsch, passing (the human did not ask for them; the card-point result is enough to play).
 - Out: a real German-suited deck image set (the linked file and symbols are French-suited; the card face layer lets us add it later).
 - Out: sound conversion (MP3 plays in all current browsers, and no converter is installed).
 - Out: background music and more sound events (the human named 4 sounds only).
-- Out: accounts, server, online high scores (client only).
+- Out: accounts, online high scores (client only).
 - Out: a build step, frameworks, bundlers (the browser runs ES modules directly).
 
 ### Offiziersskat rule set (Wikipedia)
@@ -38,23 +46,25 @@ One player gets a card game site that runs only in the browser. The player plays
 
 ## Stack
 - Language: JavaScript (ES modules), HTML, CSS. Browser only.
-- Test runner: `node --test` (Node v24.21 is installed). Tests cover the pure logic, not the DOM.
-- Start: `python3 -m http.server 8000 --bind 127.0.0.1` in the repo root (Python 3.9.6 is installed), then open `http://localhost:8000/`. ES modules do not load from `file://`, so a local server is necessary.
+- Test runner: `node --test` (Node v24.21 is installed). Tests cover the pure logic, not the DOM. Online tests use an in-memory link pair, not the network.
+- Start: `python3 -m http.server 8000 --bind 127.0.0.1` in the repo root (Python 3.9.6 is installed), then open `http://localhost:8000/`. ES modules do not load from `file://`, so a local server is necessary. For a 2-browser test, open the same URL in 2 browser windows (or 2 `playwright-cli` sessions); both need internet access to `0.peerjs.com`.
 - Card faces: CardMeister `<playing-card>` custom element, vendored unchanged (`elements.cardmeister.full.js`, ~149 KB, court images included). No build step, no CDN.
 - Animation: CSS transitions and the Web Animations API. Sound: `HTMLAudioElement` with MP3 files.
+- Online: PeerJS 1.5.5 browser build, vendored unchanged as `vendor/peerjs/peerjs.min.js` (UMD global `Peer`). The app loads it only when the player opens the 2-player screen, so single player makes no network calls.
 
 ## Dependencies
-- CardMeister `<playing-card>` (https://github.com/cardmeister/cardmeister.github.io, Unlicense), vendored unchanged as `vendor/cardmeister/elements.cardmeister.full.js`. Chosen by the human on 2026-10-12 (idea.md Feedback 3).
-- Nothing else: the platform has ES modules, `localStorage`, Web Animations, `Audio`, and `node:test`.
+- CardMeister `<playing-card>` (https://github.com/cardmeister/cardmeister.github.io, Unlicense), vendored as `vendor/cardmeister/elements.cardmeister.full.js`. Chosen by the human (idea.md Feedback 3).
+- PeerJS 1.5.5 (https://github.com/peers/peerjs, MIT), vendored with its LICENSE as `vendor/peerjs/`: the public broker speaks the PeerJS signaling protocol, and the platform has WebRTC but no client for that protocol. Chosen by the human (idea.md Feedback 4).
+- Nothing else: the platform has ES modules, `localStorage`, Web Animations, `Audio`, WebRTC, and `node:test`.
 
 ## Architecture
-- `index.html` + `src/main.js`: start the app, show the game menu, the mute button, and the credits.
-- `src/core/`: `cards.js` (Skat deck, seeded shuffle), `card-view.js` (card face layer: CardMeister `<playing-card>` with symbol fallback), `registry.js`, `storage.js` (`localStorage` with a version key), `sound.js` (shared sounds and mute), `motion.js` (deal, fly, and sweep animations; honors reduced motion).
-- `src/games/offiziersskat/`: `rules.js` (pure state and moves: stepwise deal, announce, legal moves, play, trick winner, result), `ai.js` (selects a move from the visible cards only), `index.js` (renders the state, sends clicks as moves, names the events for motion and sound).
-- `vendor/cardmeister/` (component + Unlicense notice), `assets/sounds/` (4 MP3 files).
-- Data flow: the view sends a move -> `rules.js` returns a new state -> storage saves it -> the view renders it and plays motion and sound for the change. When the computer has the turn, `ai.js` selects a move and the same path runs.
-- The state is plain JSON. Cards that are not dealt yet stay in a hidden `stock` in the state. Animation and sound never change the state.
-- Tests: `test/*.test.js` import the pure modules only.
+- `index.html` + `src/main.js`: start the app, show the menu (single player and "Zu zweit spielen"), the mute button, and the credits.
+- `src/core/`: `cards.js`, `card-view.js`, `registry.js`, `storage.js`, `sound.js`, `motion.js` (as before); new `room-code.js` (make and normalize codes, pure) and `link.js` (PeerJS wrapper: `host(code)` / `join(code)` give a link with `send`, `onMessage`, `onClose`).
+- `src/games/offiziersskat/`: `rules.js` (pure state and moves), `ai.js`, `index.js` (render, motion and sound events), new `online.js` (seat view for the guest: swap seats, hide face-down cards and stock; host and guest session over any link).
+- `vendor/cardmeister/`, `vendor/peerjs/`, `assets/sounds/`.
+- Single player: the view sends a move -> `rules.js` returns a new state -> storage saves it -> the view renders it with motion and sound. On the computer turn, `ai.js` selects the move.
+- Online: the host is seat `human`, the guest is seat `computer` (no AI). A guest click sends `{type:"move"}` -> the host checks the turn and applies it -> the host sends the guest view `{type:"state"}` -> both browsers render through the same path as single player.
+- The state is plain JSON. Animation, sound, and the network never change the rules.
 
 ## Slices
 1. S1 Walking skeleton: `index.html` shows "Karten" from `src/main.js`, `node --test` runs one passing test, and the README gives the start and test commands.
@@ -72,6 +82,12 @@ One player gets a card game site that runs only in the browser. The player plays
 13. S15 Card animations: `src/core/motion.js` deals the cards from a central stack in the steps of S12, flies each played card to the trick, and sweeps the finished trick to a won-tricks pile at the side of the winner. Each pile grows with each trick. The trick clears after 2.5 seconds or when the next card is played. With `prefers-reduced-motion`, the cards go to their places without motion. Needs S12, S13.
 14. S10 Better computer: the computer uses rules of thumb (take a trick with points cheaply, give low cards when it loses, keep trumps, take care which card below it reveals, announce from the 4 open cards). Tests check some fixed positions. Needs S12.
 15. S11 Rules page: a short German rules text (the Wikipedia rule set above, with the stepwise deal and the 60:60 rule) is available from the game screen, so that the human can check the rule set. Needs S12.
+16. S16 Room code and connection: the Offiziersskat menu entry gets "Zu zweit spielen". "Raum öffnen" shows a short code (word from Kreuz/Pik/Herz/Karo/Bube/Dame/König/Ass plus 2 digits, e.g. `KREUZ-42`) with a copy button; "Raum beitreten" has a code field. `src/core/room-code.js` makes and normalizes codes (case, spaces, missing dash; peer id `karten-<code>`); `src/core/link.js` wraps the lazily loaded vendored PeerJS (`vendor/peerjs/`, MIT LICENSE). When both browsers connect, both show "Verbunden". README and credits name PeerJS and the use of `0.peerjs.com`. Tests check the code functions. Needs S15.
+17. S17 Online session logic: `src/games/offiziersskat/online.js` has a pure guest view (seats swapped, face-down cards and stock hidden, legal stacks kept) and host and guest sessions over a link. The host applies only moves of the player in turn, rejects illegal moves, and sends the new view after each change. Tests play a full seeded game over an in-memory link pair, check that the guest view never holds a hidden card, and check that an out-of-turn move changes nothing. Needs S12.
+18. S18 Play Offiziersskat in 2 browsers: after "Verbunden", the host deals, Vorhand (host or guest) announces with the buttons, and both players play a full game by clicks. Each browser shows its own row as "Du" and the other as "Mitspieler", with the same motion, sound, and win/loss message from its own view. "Nächstes Spiel" (host) starts the next game with the other dealer, and the score list shows in both browsers. Online games are not saved, and single player save stays unchanged. Needs S16, S17.
+19. S19 Connection errors: an unknown code shows "Raum nicht gefunden", a code that is in use makes a new code, a broker that is not reachable shows "Keine Verbindung zum Vermittlungsserver", and when the other player leaves, the table shows "Mitspieler hat das Spiel verlassen" with a button back to the menu. A timeout stops the waiting after 15 seconds on join. Tests check the error-to-message mapping. Needs S18.
 
 ## Open questions
-- (answered 2026-10-12) Deck: the human chose the French-suited SVG deck (Kreuz, Pik, Herz, Karo) with German names. Plan order confirmed as above.
+- (answered 2026-10-12) Deck: the human chose the French-suited deck (Kreuz, Pik, Herz, Karo) with German names.
+- (answered, Feedback 4) 2-browser mode: short room code, public PeerJS broker for signaling only.
+- Some networks (strict company or mobile NAT) can block a direct connection. The plan uses the PeerJS default STUN/TURN only. If the human needs play on such networks, an own TURN server becomes a new plan item.
