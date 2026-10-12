@@ -39,3 +39,9 @@ The remaining backlog S9 (save/resume), S10 (better computer), S11 (rules page) 
 > vielleicht können wir das nehmen? https://cardmeister.github.io/
 
 Coordinator notes: CardMeister `<playing-card>` web component, Unlicense (public domain), one self-contained JS file, no network calls (checked), 52 French cards incl. court images and card back; `letters=ABDK` gives German index letters (B, D, K, A). Replaces the Bellot SVG extraction in S13 (no LGPL handling needed). Sample render checked in a browser: Buben, Herz 7–A and card back look right.
+
+## Feedback 4
+User (verbatim): "mach mal ein komplettes audit bitte und danach spielen wir mit 2 browsern. Am besten via code eingabe oder sowas - das man seinen 2. spieler findet"
+
+Decision (AskUserQuestion): "Kurzer Raum-Code (Empfohlen)" — player 1 opens a game and gets a short room code (e.g. "KREUZ-42"), player 2 types it in. The public PeerJS broker (0.peerjs.com) is used only to set up the connection; the game then runs directly browser↔browser over WebRTC. This is an accepted external service; network is needed only for 2-player mode. Single player vs computer stays fully offline.
+Planned order: first the whole-repo audit (its Must fix findings), then the 2-browser Offiziersskat.
