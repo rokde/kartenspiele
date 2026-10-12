@@ -93,6 +93,7 @@ test("AC-7: render shows Vorhand, the trump name, and all cards", () => {
   for (const [i, g] of GAMES.entries()) {
     const html = game.render(game.applyMove(human, { type: "announce", game: g }));
     assert.match(html, new RegExp(`Trumpf: ${LABELS[i]}<`));
+    assert.match(html, /<p class="trump-badge[^"]*" role="status" tabindex="-1">/);
     assert.equal(count(html, 'class="card card--'), 16);
     assert.equal(count(html, 'aria-label="Verdeckte Karte"'), 16);
   }

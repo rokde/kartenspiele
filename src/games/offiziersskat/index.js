@@ -27,7 +27,7 @@ function renderRow(label, player) {
 function renderAnnouncement(state) {
   const vorhand = `<p class="announce__vorhand">Vorhand: ${state.vorhand === "human" ? "Du" : "Computer"}</p>`;
   if (state.trump) {
-    return vorhand + `<p class="trump-badge trump-badge--${state.trump}">${symbol(state.trump)}Trumpf: ${GAME_NAMES[state.trump]}</p>`;
+    return vorhand + `<p class="trump-badge trump-badge--${state.trump}" role="status" tabindex="-1">${symbol(state.trump)}Trumpf: ${GAME_NAMES[state.trump]}</p>`;
   }
   if (state.vorhand !== "human") return vorhand;
   const buttons = rules.GAMES.map((game) =>
