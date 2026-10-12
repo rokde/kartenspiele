@@ -2,8 +2,8 @@ import { cardName } from "./cards.js";
 
 export const TRICK_PAUSE = 2500;
 export const DURATIONS = { deal: 300, fly: 300, sweep: 350 };
-const DEAL_STAGGER = 40;
-const DEAL_STEP = 250;
+export const DEAL_STAGGER = 40;
+export const DEAL_STEP = 250;
 const EASE = "cubic-bezier(0.2, 0.8, 0.3, 1)";
 
 const center = (r) => [r.left + r.width / 2, r.top + r.height / 2];
@@ -49,7 +49,8 @@ export function createMotion({
     }
   }
 
-  function run(events, view) {
+  // `timed(event, delay, duration)` gets the schedule of each deal and play animation, so that sound can follow it.
+  function run(events, view, timed = () => {}) {
     for (const animation of open) animation.finish();
     open = [];
     clearTimeout(timer);
@@ -80,14 +81,15 @@ export function createMotion({
     for (const event of events) {
       if (event.type === "deal") {
         const deck = view.deck();
-        if (deck) {
-          view.dealt(event).forEach((element, i) =>
-            flyIn(view, element, view.rect(deck), { duration: DURATIONS.deal, delay: delay + i * DEAL_STAGGER }));
-        }
+        const dealt = deck ? view.dealt(event) : [];
+        dealt.forEach((element, i) =>
+          flyIn(view, element, view.rect(deck), { duration: DURATIONS.deal, delay: delay + i * DEAL_STAGGER }));
+        if (dealt.length) timed(event, delay, (dealt.length - 1) * DEAL_STAGGER + DURATIONS.deal);
         delay += DEAL_STEP;
       } else if (event.type === "play") {
         const element = from.has(event) && view.card(event.card);
         if (element) flyIn(view, element, from.get(event), { duration: DURATIONS.fly, delay });
+        timed(event, delay, DURATIONS.fly);
         delay += DURATIONS.fly;
       }
     }

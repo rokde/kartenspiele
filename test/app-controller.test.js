@@ -7,6 +7,8 @@ import * as game from "../src/games/offiziersskat/index.js";
 import * as rules from "../src/games/offiziersskat/rules.js";
 
 const KEY = "karten:offiziersskat";
+// startApp preloads the sounds. A test can replace this fake.
+globalThis.Audio ??= class { play() {} pause() {} };
 const settle = () => new Promise((resolve) => setImmediate(resolve));
 
 // Fake timers with a fake clock: tick(ms) calls each timer that is due, in time order.
@@ -241,4 +243,28 @@ test("the resume and the return to a saved game play no sound and no motion", as
   if (stateIn(storage).turn === "computer") await t.clock.tick(800);
   else await t.click("data-stack=");
   assert.ok(played.length > 0);
+});
+
+test("S20 AC-6: a new run and leaving the game screen pause the sound and leave no sound timer", async (context) => {
+  const log = [];
+  const savedAudio = globalThis.Audio;
+  globalThis.Audio = class {
+    constructor(src) { this.src = src; }
+    play() { log.push(["play", this.src]); }
+    pause() { log.push(["pause", this.src]); }
+  };
+  context.after(() => (globalThis.Audio = savedAudio));
+  const t = setup();
+  for (const fn of t.document.listeners.click) fn();
+  const deal = "assets/sounds/shuffle.mp3";
+  // With reduced motion, the deal sound stops after DURATIONS.deal.
+  await t.click('data-game-id="offiziersskat"');
+  assert.deepEqual(log, [["play", deal]]);
+  assert.equal(t.clock.pending(300), 1);
+  await t.click('data-action="new"');
+  assert.deepEqual(log, [["play", deal], ["pause", deal], ["play", deal]]);
+  assert.equal(t.clock.pending(300), 1);
+  await t.click('data-action="back"');
+  assert.deepEqual(log.at(-1), ["pause", deal]);
+  assert.equal(t.clock.timers.size, 0);
 });

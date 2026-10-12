@@ -18,7 +18,7 @@ const throwing = { getItem() { throw new Error("blocked"); }, setItem() { throw 
 // A fake Audio: it records each created file and each play() call.
 const fakeAudio = (result = Promise.resolve()) => {
   const log = [];
-  const create = (src) => ({ play: () => (log.push(src), result) });
+  const create = (src) => ({ play: () => (log.push(src), result), pause() {} });
   return { log, create };
 };
 
@@ -31,7 +31,7 @@ test("AC-1: sound.js maps the 4 events to the 4 files, and the files exist", () 
   });
   for (const file of Object.values(SOUNDS)) assert.ok(existsSync(new URL(file, root)), file);
   const audio = fakeAudio();
-  const sound = createSound(memory(), audio.create);
+  const sound = createSound(memory(), { createAudio: audio.create });
   sound.unlock();
   for (const event of ["unknown", "toString", "__proto__", undefined]) assert.doesNotThrow(() => sound.play(event));
   assert.deepEqual(audio.log, []);
@@ -51,7 +51,7 @@ test("AC-2: the mute setting defaults to off, persists, and survives a broken st
 
 test("AC-3: play creates audio only after unlock and when not muted", () => {
   const audio = fakeAudio();
-  const sound = createSound(memory(), audio.create);
+  const sound = createSound(memory(), { createAudio: audio.create });
   sound.play("play");
   assert.deepEqual(audio.log, []);
   sound.unlock();
@@ -72,7 +72,7 @@ test("AC-3: a rejected play() gives no unhandled rejection and no console output
   for (const name of Object.keys(original)) console[name] = (...args) => logged.push(args);
   try {
     const audio = fakeAudio(Promise.reject(new DOMException("blocked", "NotAllowedError")));
-    const sound = createSound(memory(), audio.create);
+    const sound = createSound(memory(), { createAudio: audio.create });
     sound.unlock();
     sound.play("play");
     sound.play("deal");
@@ -99,13 +99,14 @@ function endings() {
   return found;
 }
 
-test("AC-4: soundEvents gives deal, play, win, lose, and nothing for an announcement", () => {
+test("AC-4: soundEvents gives deal, play, win, lose, and the rest deal for an announcement", () => {
   const dealt = rules.newGame(3, "computer");
   assert.equal(dealt.vorhand, "human");
   assert.deepEqual(game.soundEvents(null, dealt), ["deal"]);
   assert.deepEqual(game.soundEvents(null, game.newGame(4, "human")), ["deal"]);
   const announced = rules.applyMove(dealt, { type: "announce", game: "herz" });
-  assert.deepEqual(game.soundEvents(dealt, announced), []);
+  assert.deepEqual(game.soundEvents(dealt, announced), ["deal"]);
+  assert.deepEqual(game.soundEvents(dealt, dealt), []);
   const humanCard = rules.applyMove(announced, aiMove(announced));
   assert.equal(announced.turn, "human");
   assert.deepEqual(game.soundEvents(announced, humanCard), ["play"]);
