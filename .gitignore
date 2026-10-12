@@ -5,3 +5,6 @@ factory/dashboard.html
 factory/audit.md
 .claude/worktrees/
 # <<< software factory
+
+# playwright-cli session output
+.playwright-cli/
