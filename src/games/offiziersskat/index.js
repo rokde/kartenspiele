@@ -3,7 +3,7 @@ import { SUIT_NAMES, SUIT_SYMBOLS } from "../../core/cards.js";
 import * as rules from "./rules.js";
 import { aiMove } from "./ai.js";
 
-export { applyMove } from "./rules.js";
+export { applyMove, isOver } from "./rules.js";
 export { aiMove };
 
 export const id = "offiziersskat";
@@ -17,11 +17,32 @@ export function newGame(seed, vorhand) {
   return state.vorhand === "computer" ? rules.applyMove(state, aiMove(state)) : state;
 }
 
-function renderRow(label, player) {
-  const stacks = player.stacks
-    .map((stack) => `<li class="stack">${renderCard(stack.up)}${renderCardBack()}</li>`)
-    .join("");
+const PLAYER_NAMES = { human: "Du", computer: "Computer" };
+
+function renderStack(stack, i, legal) {
+  const up = !stack.up ? "" : legal.includes(i)
+    ? `<button type="button" class="stack__play" data-stack="${i}">${renderCard(stack.up)}</button>`
+    : renderCard(stack.up);
+  return `<li class="stack">${up}${stack.down ? renderCardBack() : ""}</li>`;
+}
+
+function renderRow(label, player, legal = []) {
+  const stacks = player.stacks.map((stack, i) => renderStack(stack, i, legal)).join("");
   return `<h3 class="row__label">${label}</h3><ul class="row">${stacks}</ul>`;
+}
+
+function renderStatus(state) {
+  if (rules.isOver(state)) return "Spiel vorbei";
+  return state.turn === "human" ? "Du bist dran" : "Computer ist dran";
+}
+
+// An empty open trick shows the last trick, so that the human sees both cards until the next card.
+function renderTrick(state) {
+  const last = state.trick.length === 0 && state.tricks.at(-1);
+  const cards = (last ? last.cards : state.trick).map(({ player, card }) =>
+    `<li class="trick__card"><span class="trick__player">${PLAYER_NAMES[player]}</span>${renderCard(card)}</li>`).join("");
+  const caption = last ? `<p class="trick__winner">Stich für ${last.winner === "human" ? "dich" : "Computer"}</p>` : "";
+  return `<div class="trick"><ul class="trick__cards" aria-label="Stich">${cards}</ul>${caption}</div>`;
 }
 
 function renderAnnouncement(state) {
@@ -37,9 +58,12 @@ function renderAnnouncement(state) {
 }
 
 export function render(state) {
+  const playing = state.trump !== null;
+  const legal = playing && state.turn === "human" && !rules.isOver(state) ? rules.legalStacksFor(state) : [];
   return `<h2>${name}</h2><div class="table">` +
     `<div class="announce">${renderAnnouncement(state)}</div>` +
     renderRow("Computer", state.players.computer) +
-    renderRow("Du", state.players.human) +
+    (playing ? `<p class="status" role="status" tabindex="-1">${renderStatus(state)}</p>${renderTrick(state)}` : "") +
+    renderRow("Du", state.players.human, legal) +
     `</div>`;
 }
