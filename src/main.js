@@ -14,20 +14,35 @@ if (typeof document !== "undefined") {
 
   let game;
   let state;
-  const showGame = () => show(renderGameScreen(game, state));
+  let timer;
+  const showGame = () => {
+    show(renderGameScreen(game, state));
+    (app.querySelector("[data-announce], [data-stack]") ?? app.querySelector(".status"))?.focus();
+    // A short pause, so that the human can see each computer card.
+    if (state.trump !== null && state.turn === "computer" && !game.isOver(state)) {
+      timer = setTimeout(() => {
+        state = game.applyMove(state, game.aiMove(state));
+        showGame();
+      }, 800);
+    }
+  };
 
   app.addEventListener("click", (event) => {
     const button = event.target.closest("button");
     if (!button) return;
-    if (button.dataset.action === "back") show(menuHtml());
-    else if (button.dataset.gameId) {
+    if (button.dataset.action === "back") {
+      clearTimeout(timer);
+      show(menuHtml());
+    } else if (button.dataset.gameId) {
       game = getGame(button.dataset.gameId);
       state = game.newGame(crypto.getRandomValues(new Uint32Array(1))[0]);
       showGame();
     } else if (button.dataset.announce) {
       state = game.applyMove(state, { type: "announce", game: button.dataset.announce });
       showGame();
-      app.querySelector(".trump-badge")?.focus();
+    } else if (button.dataset.stack) {
+      state = game.applyMove(state, { type: "play", stack: Number(button.dataset.stack) });
+      showGame();
     }
   });
 

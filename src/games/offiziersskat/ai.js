@@ -1,8 +1,12 @@
 import { SUITS } from "../../core/cards.js";
-import { CARD_POINTS } from "./rules.js";
+import { CARD_POINTS, legalStacksFor } from "./rules.js";
 
 // Strength of a suit: first the card count, then the card points. The Unter are trump in every game, so skip them.
-export function aiMove(state) {
+export function aiMove(state, random = Math.random) {
+  if (state.trump !== null) {
+    const legal = legalStacksFor(state);
+    return { type: "play", stack: legal[Math.floor(random() * legal.length)] };
+  }
   const cards = state.players.computer.stacks.map((stack) => stack.up).filter((card) => card.rank !== "U");
   const strength = (suit) => {
     const own = cards.filter((card) => card.suit === suit);

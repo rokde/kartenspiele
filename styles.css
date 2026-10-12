@@ -49,8 +49,9 @@ h1 {
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
-.card:hover,
-.card:active {
+.stack__play:hover .card,
+.stack__play:active .card,
+.stack__play:focus-visible .card {
   transform: translateY(-4px) rotate(-2deg);
   box-shadow: 0 6px 10px rgb(59 36 20 / 0.25);
 }
@@ -151,6 +152,35 @@ h1 {
   list-style: none;
 }
 
+/* On the human turn, stacks that are not legal look faded. Fade the whole stack, so the back does not show through. */
+.row--playing .stack:not(:has(.stack__play)) {
+  opacity: 0.5;
+}
+
+/* Keep the space of the card and the back, so the rows do not jump when stacks get empty. */
+.stack {
+  aspect-ratio: 5 / 9;
+}
+
+.stack__play {
+  display: block;
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+  border-radius: clamp(0.4rem, 1.5vw, 0.75rem);
+  cursor: pointer;
+}
+
+.stack__play:focus-visible {
+  outline: 3px solid var(--schellen);
+  outline-offset: 3px;
+}
+
 .stack .card {
   position: relative;
   z-index: 1;
@@ -247,6 +277,79 @@ h1 {
   box-shadow: 0 2px 4px rgb(59 36 20 / 0.2);
 }
 
+.status {
+  margin: 1rem 0 0;
+  font-weight: 700;
+  text-align: center;
+}
+
+/* The status gets the focus only from the script, as a place to keep the focus. */
+.status:focus {
+  outline: none;
+}
+
+.trick {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 9.5rem;
+}
+
+.trick__cards {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin: 0.5rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.trick__card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  width: 4.5rem;
+  font-size: 0.85rem;
+}
+
+.trick__card .card {
+  width: 100%;
+}
+
+.trick__winner {
+  margin: 0.5rem 0 0;
+  font-style: italic;
+}
+
+/* Phone: the trick area fills the lower half, and the cards get the full width. */
+@media (max-width: 30rem) {
+  main {
+    padding: 0.5rem;
+  }
+
+  .row {
+    gap: 0.2rem;
+  }
+
+  .trick {
+    min-height: 12rem;
+    justify-content: center;
+  }
+
+  .trick__card {
+    width: 5.5rem;
+  }
+
+  .trick__card .card__rank {
+    font-size: 1.5rem;
+  }
+
+  .trick__card .card__symbol {
+    font-size: 2.5rem;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .card,
   .game-button,
@@ -255,8 +358,9 @@ h1 {
     transition: none;
   }
 
-  .card:hover,
-  .card:active,
+  .stack__play:hover .card,
+  .stack__play:active .card,
+  .stack__play:focus-visible .card,
   .game-button:hover,
   .game-button:active,
   .back-button:hover,
