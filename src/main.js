@@ -40,7 +40,6 @@ if (typeof document !== "undefined") {
     } else if (button.dataset.announce) {
       state = game.applyMove(state, { type: "announce", game: button.dataset.announce });
       showGame();
-      app.querySelector(".trump-badge")?.focus();
     } else if (button.dataset.stack) {
       state = game.applyMove(state, { type: "play", stack: Number(button.dataset.stack) });
       showGame();

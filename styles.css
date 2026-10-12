@@ -152,6 +152,11 @@ h1 {
   list-style: none;
 }
 
+/* On the human turn, stacks that are not legal look faded. Fade the whole stack, so the back does not show through. */
+.row--playing .stack:not(:has(.stack__play)) {
+  opacity: 0.5;
+}
+
 /* Keep the space of the card and the back, so the rows do not jump when stacks get empty. */
 .stack {
   aspect-ratio: 5 / 9;

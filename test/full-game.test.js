@@ -143,3 +143,13 @@ test("AC-8: render shows the open trick, else the last trick and its winner, and
   }
   assert.equal(count(render(state), 'aria-label="Verdeckte Karte"'), 0);
 });
+
+test("AC-7: each stack button has a name, and only the human row on the human turn is marked as playing", () => {
+  const human = announced(4, "human");
+  const html = render(human);
+  for (const i of legal(human)) {
+    assert.ok(html.includes(`data-stack="${i}" aria-label="${cardName(human.players.human.stacks[i].up)} spielen"`));
+  }
+  assert.equal(count(html, "row--playing"), 1);
+  assert.equal(count(render(rules.applyMove(human, { type: "play", stack: 0 })), "row--playing"), 0);
+});

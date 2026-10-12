@@ -1,5 +1,5 @@
 import { renderCard, renderCardBack } from "../../core/card-view.js";
-import { SUIT_NAMES, SUIT_SYMBOLS } from "../../core/cards.js";
+import { SUIT_NAMES, SUIT_SYMBOLS, cardName } from "../../core/cards.js";
 import * as rules from "./rules.js";
 import { aiMove } from "./ai.js";
 
@@ -21,14 +21,14 @@ const PLAYER_NAMES = { human: "Du", computer: "Computer" };
 
 function renderStack(stack, i, legal) {
   const up = !stack.up ? "" : legal.includes(i)
-    ? `<button type="button" class="stack__play" data-stack="${i}">${renderCard(stack.up)}</button>`
+    ? `<button type="button" class="stack__play" data-stack="${i}" aria-label="${cardName(stack.up)} spielen">${renderCard(stack.up)}</button>`
     : renderCard(stack.up);
   return `<li class="stack">${up}${stack.down ? renderCardBack() : ""}</li>`;
 }
 
 function renderRow(label, player, legal = []) {
   const stacks = player.stacks.map((stack, i) => renderStack(stack, i, legal)).join("");
-  return `<h3 class="row__label">${label}</h3><ul class="row">${stacks}</ul>`;
+  return `<h3 class="row__label">${label}</h3><ul class="row${legal.length ? " row--playing" : ""}">${stacks}</ul>`;
 }
 
 function renderStatus(state) {
