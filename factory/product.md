@@ -44,11 +44,12 @@ One player gets a card game site that runs only in the browser. The player plays
 - Animation: CSS transitions and the Web Animations API. Sound: `HTMLAudioElement` with MP3 files.
 
 ## Dependencies
-- none (the platform has ES modules, `localStorage`, Web Animations, `Audio`, and `node:test`; Python's standard library parses the SVG)
+- CardMeister `<playing-card>` (https://github.com/cardmeister/cardmeister.github.io, Unlicense), vendored unchanged as `vendor/cardmeister/elements.cardmeister.full.js`. Chosen by the human on 2026-10-12 (idea.md Feedback 3).
+- Nothing else: the platform has ES modules, `localStorage`, Web Animations, `Audio`, and `node:test`.
 
 ## Architecture
 - `index.html` + `src/main.js`: start the app, show the game menu, the mute button, and the credits.
-- `src/core/`: `cards.js` (Skat deck, seeded shuffle), `card-view.js` (card face layer: SVG image with symbol fallback), `registry.js`, `storage.js` (`localStorage` with a version key), `sound.js` (shared sounds and mute), `motion.js` (deal, fly, and sweep animations; honors reduced motion).
+- `src/core/`: `cards.js` (Skat deck, seeded shuffle), `card-view.js` (card face layer: CardMeister `<playing-card>` with symbol fallback), `registry.js`, `storage.js` (`localStorage` with a version key), `sound.js` (shared sounds and mute), `motion.js` (deal, fly, and sweep animations; honors reduced motion).
 - `src/games/offiziersskat/`: `rules.js` (pure state and moves: stepwise deal, announce, legal moves, play, trick winner, result), `ai.js` (selects a move from the visible cards only), `index.js` (renders the state, sends clicks as moves, names the events for motion and sound).
 - `vendor/cardmeister/` (component + Unlicense notice), `assets/sounds/` (4 MP3 files).
 - Data flow: the view sends a move -> `rules.js` returns a new state -> storage saves it -> the view renders it and plays motion and sound for the change. When the computer has the turn, `ai.js` selects a move and the same path runs.
