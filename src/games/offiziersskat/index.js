@@ -32,6 +32,24 @@ export function soundEvents(prev, next) {
   return events;
 }
 
+// The motion events for one state change: deal steps in the S12 order, played cards, and finished tricks.
+export function motionEvents(prev, next) {
+  const deal = (steps) => steps.map(([role, first, side]) =>
+    ({ type: "deal", player: next[role], side, stacks: [first, first + 1, first + 2, first + 3] }));
+  if (!prev || rules.isOver(prev)) {
+    if (playedCount(next) > 0) return [];
+    return deal(next.trump === null ? rules.FIRST_DEAL : [...rules.FIRST_DEAL, ...rules.REST_DEAL]);
+  }
+  if (prev.trump === null) return next.trump === null ? [] : deal(rules.REST_DEAL);
+  const played = [...next.tricks.flatMap((t) => t.cards), ...next.trick];
+  const start = playedCount(prev);
+  return played.slice(start).flatMap(({ player, card }, i) => {
+    const k = start + i;
+    const play = { type: "play", player, card };
+    return k % 2 ? [play, { type: "trick", winner: next.tricks[(k - 1) / 2].winner }] : [play];
+  });
+}
+
 const PLAYER_NAMES = { human: "Du", computer: "Computer" };
 
 function renderStack(stack, i, legal) {
@@ -41,9 +59,18 @@ function renderStack(stack, i, legal) {
   return `<li class="stack">${up}${stack.down ? renderCardBack() : ""}</li>`;
 }
 
-function renderRow(label, player, legal = []) {
-  const stacks = player.stacks.map((stack, i) => renderStack(stack, i, legal)).join("");
-  return `<h3 class="row__label">${label}</h3><ul class="row${legal.length ? " row--playing" : ""}">${stacks}</ul>`;
+// One back for each won trick. The slot has a fixed size, so the pile does not move the layout.
+function renderPile(state, player) {
+  const won = state.tricks.filter((t) => t.winner === player).length;
+  const backs = Array.from({ length: won }, (_, i) => `<span class="card-back" style="--i: ${i}"></span>`).join("");
+  return `<div class="pile" data-player="${player}" role="img" aria-label="${PLAYER_NAMES[player]}: ${won} ${won === 1 ? "Stich" : "Stiche"}">` +
+    `<span class="pile__slot">${backs}</span><span class="pile__count">${won}</span></div>`;
+}
+
+function renderRow(state, player, legal = []) {
+  const stacks = state.players[player].stacks.map((stack, i) => renderStack(stack, i, legal)).join("");
+  return `<div class="row__head"><h3 class="row__label">${PLAYER_NAMES[player]}</h3>${renderPile(state, player)}</div>` +
+    `<ul class="row${legal.length ? " row--playing" : ""}" data-player="${player}">${stacks}</ul>`;
 }
 
 function renderStatus(state) {
@@ -51,13 +78,14 @@ function renderStatus(state) {
   return state.turn === "human" ? "Du bist dran" : "Computer ist dran";
 }
 
-// An empty open trick shows the last trick, so that the human sees both cards until the next card.
-function renderTrick(state) {
-  const last = state.trick.length === 0 && state.tricks.at(-1);
+// An empty open trick shows the last trick until it is cleared. The deal stack sits in the middle.
+function renderTrick(state, trickCleared) {
+  const last = !trickCleared && state.trick.length === 0 && state.tricks.at(-1);
   const cards = (last ? last.cards : state.trick).map(({ player, card }) =>
     `<li class="trick__card"><span class="trick__player">${PLAYER_NAMES[player]}</span>${renderCard(card)}</li>`).join("");
   const caption = last ? `<p class="trick__winner">Stich für ${last.winner === "human" ? "dich" : "Computer"}</p>` : "";
-  return `<div class="trick"><ul class="trick__cards" aria-label="Stich">${cards}</ul>${caption}</div>`;
+  const deck = `<div class="deal-stack" aria-hidden="true">${state.stock.length ? '<span class="card-back"></span>'.repeat(3) : ""}</div>`;
+  return `<div class="trick">${deck}<ul class="trick__cards" aria-label="Stich">${cards}</ul>${caption}</div>`;
 }
 
 function renderAnnouncement(state) {
@@ -88,13 +116,14 @@ function renderResult(state) {
     `</section>`;
 }
 
-export function render(state) {
+export function render(state, { trickCleared = false } = {}) {
   const playing = state.trump !== null;
   const legal = playing && state.turn === "human" && !rules.isOver(state) ? rules.legalStacksFor(state) : [];
   return `<h2>${name}</h2><div class="table">` +
     `<div class="announce">${renderAnnouncement(state)}</div>` +
-    renderRow("Computer", state.players.computer) +
-    (playing ? `<p class="status" role="status" tabindex="-1">${renderStatus(state)}</p>${renderTrick(state)}` : "") +
-    renderRow("Du", state.players.human, legal) +
+    renderRow(state, "computer") +
+    (playing ? `<p class="status" role="status" tabindex="-1">${renderStatus(state)}</p>` : "") +
+    renderTrick(state, trickCleared) +
+    renderRow(state, "human", legal) +
     `</div>` + (rules.isOver(state) ? renderResult(state) : "");
 }

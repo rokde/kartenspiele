@@ -2,6 +2,7 @@ import { listGames, getGame } from "./core/registry.js";
 import { renderMenu, renderGameScreen, renderCredits } from "./core/menu-view.js";
 import { save, load } from "./core/storage.js";
 import { createSound } from "./core/sound.js";
+import { createMotion, domView } from "./core/motion.js";
 
 export const APP_TITLE = "Karten";
 
@@ -17,6 +18,10 @@ if (typeof document !== "undefined") {
   let game;
   let state;
   let timer;
+  // A trick that the motion swept away stays hidden. A counter drops the end of an old run.
+  let cleared = false;
+  let runs = 0;
+  const motion = createMotion({ reduced: matchMedia("(prefers-reduced-motion: reduce)").matches });
   const seed = () => crypto.getRandomValues(new Uint32Array(1))[0];
   // Reading localStorage throws when the browser blocks it. Then the game runs without a save.
   const store = (() => { try { return localStorage; } catch { return null; } })();
@@ -34,22 +39,35 @@ if (typeof document !== "undefined") {
     showMute();
   });
   showMute();
-  const showGame = () => {
+  const paint = () => {
     save(store, game.id, state);
-    show(renderGameScreen(game, state));
+    show(renderGameScreen(game, state, { trickCleared: cleared }));
     (app.querySelector("[data-announce], [data-stack], [data-action=next]") ?? app.querySelector(".status"))?.focus();
-    // A short pause, so that the human can see each computer card.
+  };
+  // A short pause, so that the human can see each computer card.
+  const computerTurn = () => {
     if (state.trump !== null && state.turn === "computer" && !game.isOver(state)) {
       timer = setTimeout(() => {
         go(game.applyMove(state, game.aiMove(state)));
       }, 800);
     }
   };
-  // The resume on page load does not come here, so it plays no sound.
-  const go = (next, prev = state) => {
+  const showGame = () => {
+    paint();
+    computerTurn();
+  };
+  const view = domView(app, paint, () => { cleared = true; });
+  // The resume on page load does not come here, so it plays no sound and no motion.
+  // A click during a run starts a new run. The new run finishes the open animations first.
+  const go = async (next, prev = state) => {
+    clearTimeout(timer);
+    const run = ++runs;
     for (const event of game.soundEvents(prev, next)) sound.play(event);
     state = next;
-    showGame();
+    cleared = false;
+    await motion.run(game.motionEvents(prev, next), view);
+    // The computer waits until the animation is done.
+    if (run === runs) computerTurn();
   };
 
   app.addEventListener("click", (event) => {
@@ -57,6 +75,7 @@ if (typeof document !== "undefined") {
     if (!button) return;
     if (button.dataset.action === "back") {
       clearTimeout(timer);
+      runs++;
       show(menuHtml());
     } else if (button.dataset.action === "credits") {
       show(renderCredits());

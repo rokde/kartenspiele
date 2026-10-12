@@ -4,8 +4,8 @@ export const GAMES = [...SUITS, "grand"];
 export const CARD_POINTS = { A: 11, 10: 10, K: 4, D: 3, B: 2, 9: 0, 8: 0, 7: 0 };
 
 // The dealer deals in steps of 4 cards: [role, first stack, side]. Vorhand is the non-dealer.
-const FIRST_DEAL = [["vorhand", 0, "down"], ["dealer", 0, "down"], ["vorhand", 0, "up"]];
-const REST_DEAL = [["dealer", 0, "up"], ["vorhand", 4, "down"], ["dealer", 4, "down"], ["vorhand", 4, "up"], ["dealer", 4, "up"]];
+export const FIRST_DEAL = [["vorhand", 0, "down"], ["dealer", 0, "down"], ["vorhand", 0, "up"]];
+export const REST_DEAL = [["dealer", 0, "up"], ["vorhand", 4, "down"], ["dealer", 4, "down"], ["vorhand", 4, "up"], ["dealer", 4, "up"]];
 
 // Vorhand announces from the first deal only. The undealt cards stay hidden in the stock.
 export function newGame(seed, dealer = "computer", scores = []) {
