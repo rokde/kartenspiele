@@ -9,6 +9,51 @@ export { aiMove };
 export const id = "offiziersskat";
 export const name = "Offiziersskat";
 
+// Keep this text in line with rules.js.
+export const rulesHtml = `<h1>Spielregeln Offiziersskat</h1>
+<p>Offiziersskat ist ein Kartenspiel für zwei: du gegen den Computer.</p>
+<h2>Die Karten</h2>
+<p>Gespielt wird mit 32 Karten in vier Farben: Kreuz, Pik, Herz und Karo.
+Jede Farbe hat 7, 8, 9, 10, Bube, Dame, König und Ass.</p>
+<h2>Der Tisch</h2>
+<p>Jeder Spieler hat 8 Stapel vor sich. Auf jedem Stapel liegt unten eine Karte verdeckt und oben eine Karte offen.</p>
+<h2>Das Geben</h2>
+<p>Der Geber gibt in Schritten zu je 4 Karten. Sein Gegner ist die Vorhand.</p>
+<ol>
+<li>4 Karten verdeckt an jeden Spieler.</li>
+<li>4 Karten offen an die Vorhand.</li>
+<li>Die Vorhand sagt das Spiel an.</li>
+<li>4 Karten offen an den Geber.</li>
+<li>4 Karten verdeckt an jeden Spieler.</li>
+<li>4 Karten offen an jeden Spieler.</li>
+</ol>
+<p>Nach jedem Spiel wechselt der Geber.</p>
+<h2>Die Ansage</h2>
+<p>Die Vorhand sieht nur ihre 4 offenen Karten. Damit sagt sie eine Farbe an (Farbspiel) oder Grand.</p>
+<h2>Trumpf</h2>
+<ul>
+<li>Die vier Buben sind immer Trumpf: Kreuz-Bube, Pik-Bube, Herz-Bube, Karo-Bube (vom höchsten zum niedrigsten).</li>
+<li>Im Farbspiel ist auch die angesagte Farbe Trumpf: unter den Buben folgen Ass, 10, König, Dame, 9, 8, 7.</li>
+<li>Im Grand sind nur die Buben Trumpf.</li>
+<li>In jeder anderen Farbe gilt: Ass, 10, König, Dame, 9, 8, 7.</li>
+</ul>
+<h2>Das Spiel</h2>
+<ul>
+<li>Die Vorhand spielt die erste Karte aus.</li>
+<li>Du spielst nur offene Karten. Spielst du eine Karte von einem Stapel, wird die Karte darunter aufgedeckt.</li>
+<li>Farbe bekennen: Kannst du die ausgespielte Farbe bedienen, musst du das. Bei Trumpf musst du Trumpf bekennen.</li>
+<li>Kannst du nicht bedienen, spielst du eine beliebige offene Karte.</li>
+<li>Die höhere Karte der ausgespielten Farbe gewinnt den Stich. Ein Trumpf sticht jede andere Farbe.</li>
+<li>Wer den Stich gewinnt, spielt die nächste Karte aus.</li>
+</ul>
+<h2>Zählen und Gewinnen</h2>
+<p>Am Ende zählt jeder die Augen in seinen Stichen:</p>
+<ul>
+<li>Ass 11, Zehn 10, König 4, Dame 3, Bube 2, 9, 8 und 7 je 0.</li>
+<li>Zusammen sind es 120 Augen.</li>
+</ul>
+<p>Der Ansager gewinnt mit 61 Augen oder mehr. Bei 60:60 gewinnt der Gegner.</p>`;
+
 const GAME_NAMES = { ...SUIT_NAMES, grand: "Grand" };
 const symbol = (game) => (SUIT_SYMBOLS[game] ? `<span aria-hidden="true">${SUIT_SYMBOLS[game]}</span> ` : "");
 
