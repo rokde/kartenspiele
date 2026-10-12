@@ -70,11 +70,11 @@ test("AC-3: the AI announcement depends only on the 4 open cards of the computer
     const reversed = { ...state, stock: [...state.stock].reverse() };
     const other = {
       ...state,
-      stock: state.stock.map(() => c("eichel:7")),
+      stock: state.stock.map(() => c("kreuz:7")),
       players: {
         ...state.players,
-        human: { stacks: state.players.human.stacks.map((s) => ({ ...s, down: s.down && c("gruen:A") })) },
-        computer: { stacks: state.players.computer.stacks.map((s) => ({ ...s, down: s.down && c("schellen:A") })) },
+        human: { stacks: state.players.human.stacks.map((s) => ({ ...s, down: s.down && c("pik:A") })) },
+        computer: { stacks: state.players.computer.stacks.map((s) => ({ ...s, down: s.down && c("karo:A") })) },
       },
     };
     assert.deepEqual(aiMove(reversed), expected);
@@ -96,14 +96,14 @@ test("AC-4: the human as Vorhand sees only the 4 open cards and the announce but
   }
 });
 
-const sixty = [["rot:A", "rot:10"], ["gruen:K", "gruen:O"], ["eichel:A", "eichel:10"], ["schellen:A", "rot:9"]];
-const sixtyOne = [["rot:A", "rot:10"], ["gruen:A", "gruen:10"], ["eichel:A", "eichel:K"], ["schellen:K", "rot:7"]];
+const sixty = [["herz:A", "herz:10"], ["pik:K", "pik:D"], ["kreuz:A", "kreuz:10"], ["karo:A", "herz:9"]];
+const sixtyOne = [["herz:A", "herz:10"], ["pik:A", "pik:10"], ["kreuz:A", "kreuz:K"], ["karo:K", "herz:7"]];
 // A finished game: the announcer takes `own`, the opponent takes `rest`, and the opponent takes 0-point filler tricks.
 function finished(vorhand, own, rest = []) {
   const opponent = vorhand === "human" ? "computer" : "human";
   const tricks = [...own.map(([a, b]) => trick(vorhand, a, b)), ...rest.map(([a, b]) => trick(opponent, a, b))];
-  while (tricks.length < 16) tricks.push(trick(opponent, "rot:7", "rot:8"));
-  return { ...rules.newGame(1, opponent), trump: "rot", tricks };
+  while (tricks.length < 16) tricks.push(trick(opponent, "herz:7", "herz:8"));
+  return { ...rules.newGame(1, opponent), trump: "herz", tricks };
 }
 
 test("AC-5: the announcer wins with 61, loses with 60:60, from both views", () => {

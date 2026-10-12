@@ -8,18 +8,18 @@ import { render } from "../src/games/offiziersskat/index.js";
 const key = (card) => `${card.suit}-${card.rank}`;
 const count = (html, text) => html.split(text).length - 1;
 const stackButtons = (html) => [...html.matchAll(/<button[^>]*data-stack="(\d+)"/g)].map((m) => Number(m[1]));
-const announced = (seed, vorhand = "human", game = "rot") =>
+const announced = (seed, vorhand = "human", game = "herz") =>
   rules.applyMove(rules.newGame(seed, vorhand === "human" ? "computer" : "human"), { type: "announce", game });
 const legal = (state) => rules.legalStacks(state.players[state.turn].stacks, state.trump, state.trick[0]?.card);
 const step = (state) => rules.applyMove(state, aiMove(state));
-// "rot:7" -> { suit: "rot", rank: "7" }
+// "herz:7" -> { suit: "herz", rank: "7" }
 const c = (s) => {
   const [suit, rank] = s.split(":");
   return { suit, rank };
 };
 const withStacks = (state, player, ups) => ({
   ...state,
-  players: { ...state.players, [player]: { stacks: ups.map((up) => ({ down: c("schellen:7"), up: c(up) })) } },
+  players: { ...state.players, [player]: { stacks: ups.map((up) => ({ down: c("karo:7"), up: c(up) })) } },
 });
 
 test("AC-1: newGame sets turn, trick, and tricks, and the state is plain JSON", () => {
@@ -46,9 +46,9 @@ test("AC-2: a play move takes the card, reveals the card below, and gives the tu
 
 test("AC-3: applyMove throws before the announcement, for an illegal stack, and after the game", () => {
   assert.throws(() => rules.applyMove(rules.newGame(3, "computer"), { type: "play", stack: 0 }));
-  // The human leads Rot; the computer has one Rot card in stack 1, so it must follow suit.
-  let state = withStacks(announced(3, "human", "grand"), "human", ["rot:A", "rot:7", "rot:8", "rot:9", "rot:K", "rot:O", "rot:10", "gruen:7"]);
-  state = withStacks(state, "computer", ["gruen:A", "rot:8", "eichel:K", "schellen:9", "gruen:10", "gruen:O", "gruen:9", "gruen:8"]);
+  // The human leads Herz; the computer has one Herz card in stack 1, so it must follow suit.
+  let state = withStacks(announced(3, "human", "grand"), "human", ["herz:A", "herz:7", "herz:8", "herz:9", "herz:K", "herz:D", "herz:10", "pik:7"]);
+  state = withStacks(state, "computer", ["pik:A", "herz:8", "kreuz:K", "karo:9", "pik:10", "pik:D", "pik:9", "pik:8"]);
   state = rules.applyMove(state, { type: "play", stack: 0 });
   assert.throws(() => rules.applyMove(state, { type: "play", stack: 0 }));
   assert.throws(() => rules.applyMove(state, { type: "play", stack: 8 }));
@@ -64,12 +64,12 @@ test("AC-3: applyMove throws before the announcement, for an illegal stack, and 
 
 test("AC-4: the second card resolves the trick for the trickWinner", () => {
   for (let seed = 0; seed < 20; seed++) {
-    const first = step(announced(seed, seed % 2 ? "human" : "computer", "gruen"));
+    const first = step(announced(seed, seed % 2 ? "human" : "computer", "pik"));
     const [lead, player] = [first.trick[0], first.turn];
     const move = aiMove(first);
     const card = first.players[player].stacks[move.stack].up;
     const second = rules.applyMove(first, move);
-    const expected = rules.trickWinner(lead.card, card, "gruen") === "lead" ? lead.player : player;
+    const expected = rules.trickWinner(lead.card, card, "pik") === "lead" ? lead.player : player;
     assert.deepEqual(second.tricks, [{ winner: expected, cards: [lead, { player, card }] }]);
     assert.deepEqual(second.trick, []);
     assert.equal(second.turn, expected);
@@ -78,8 +78,8 @@ test("AC-4: the second card resolves the trick for the trickWinner", () => {
 
 test("AC-5: aiMove plays a random legal stack after the announcement", () => {
   let state = announced(8, "computer");
-  state = withStacks(state, "human", ["rot:A", "rot:7", "rot:8", "rot:9", "rot:K", "rot:O", "rot:10", "gruen:7"]);
-  state = withStacks(state, "computer", ["gruen:A", "eichel:8", "eichel:K", "gruen:9", "schellen:10", "gruen:O", "eichel:9", "rot:8"]);
+  state = withStacks(state, "human", ["herz:A", "herz:7", "herz:8", "herz:9", "herz:K", "herz:D", "herz:10", "pik:7"]);
+  state = withStacks(state, "computer", ["pik:A", "kreuz:8", "kreuz:K", "pik:9", "karo:10", "pik:D", "kreuz:9", "herz:8"]);
   state = { ...state, turn: "human" };
   state = rules.applyMove(state, { type: "play", stack: 7 });
   assert.deepEqual(legal(state), [0, 3, 5]);

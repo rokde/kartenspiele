@@ -2,10 +2,10 @@
   --bg: #fdf3e1;
   --text: #3b2414;
   --card-bg: #fffaf2;
-  --eichel: #7a4a12;
-  --gruen: #2f6b2a;
-  --rot: #b3261e;
-  --schellen: #9a5b00;
+  --brown: #7a4a12;
+  --green: #2f6b2a;
+  --red: #b3261e;
+  --gold: #9a5b00;
 }
 
 * {
@@ -27,7 +27,7 @@ main {
 
 h1 {
   text-align: center;
-  color: var(--rot);
+  color: var(--red);
 }
 
 .deck {
@@ -37,7 +37,7 @@ h1 {
 }
 
 .card {
-  aspect-ratio: 2 / 3;
+  aspect-ratio: 240 / 334;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -67,10 +67,10 @@ h1 {
   line-height: 1;
 }
 
-.card--eichel { color: var(--eichel); }
-.card--gruen { color: var(--gruen); }
-.card--rot { color: var(--rot); }
-.card--schellen { color: var(--schellen); }
+.card--kreuz,
+.card--pik { color: var(--text); }
+.card--herz,
+.card--karo { color: var(--red); }
 
 .menu {
   display: flex;
@@ -85,7 +85,7 @@ h1 {
   font: inherit;
   font-weight: 700;
   color: var(--card-bg);
-  background: var(--rot);
+  background: var(--red);
   border: none;
   border-radius: 999px;
   cursor: pointer;
@@ -103,7 +103,7 @@ h1 {
   min-height: 2.75rem;
   padding: 0.6rem 1.25rem;
   font-size: 1rem;
-  background: var(--eichel);
+  background: var(--brown);
   box-shadow: 0 3px 0 #4a2c0a;
 }
 
@@ -120,13 +120,13 @@ h1 {
 
 .game-button:focus-visible,
 .back-button:focus-visible {
-  outline: 3px solid var(--schellen);
+  outline: 3px solid var(--gold);
   outline-offset: 3px;
 }
 
 .game-screen h2 {
   text-align: center;
-  color: var(--rot);
+  color: var(--red);
 }
 
 .note {
@@ -141,7 +141,7 @@ h1 {
 
 .row__label {
   margin: 1rem 0 0.5rem;
-  color: var(--eichel);
+  color: var(--brown);
 }
 
 .row {
@@ -178,7 +178,7 @@ h1 {
 }
 
 .stack__play:focus-visible {
-  outline: 3px solid var(--schellen);
+  outline: 3px solid var(--gold);
   outline-offset: 3px;
 }
 
@@ -200,19 +200,45 @@ h1 {
 
 /* The back sits below the open card and peeks out at the bottom. */
 .card-back {
-  aspect-ratio: 2 / 3;
-  margin-top: -120%;
-  border: clamp(1px, 0.4vw, 2px) solid var(--rot);
+  aspect-ratio: 240 / 334;
+  margin-top: -110%;
+  border: clamp(1px, 0.4vw, 2px) solid var(--red);
   border-radius: clamp(0.4rem, 1.5vw, 0.75rem);
   background:
     repeating-linear-gradient(45deg, transparent 0 4px, rgb(255 250 242 / 0.35) 4px 8px),
-    var(--schellen);
+    var(--gold);
   box-shadow: 0 2px 4px rgb(59 36 20 / 0.2);
 }
 
-/* Before the open card is dealt, the back stays at its place below the card (150% card height - 120%). */
+/* Before the open card is dealt, the back stays at its place below the card (139% card height - 110%). */
 .card-back:first-child {
-  margin-top: 30%;
+  margin-top: 29%;
+}
+
+/* CardMeister cards have their own border and corners. The drop shadow follows the image shape. */
+.stack .card--image,
+.card--image,
+.card-back--image {
+  padding: 0;
+  border: none;
+  background: none;
+  box-shadow: none;
+  filter: drop-shadow(0 2px 2px rgb(59 36 20 / 0.25));
+}
+
+.stack__play:hover .card--image,
+.stack__play:active .card--image,
+.stack__play:focus-visible .card--image {
+  box-shadow: none;
+  filter: drop-shadow(0 6px 5px rgb(59 36 20 / 0.3));
+}
+
+.card--image playing-card,
+.card-back--image playing-card,
+.card--image img,
+.card-back--image img {
+  display: block;
+  width: 100%;
 }
 
 .announce {
@@ -249,14 +275,14 @@ h1 {
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
-.announce-button--eichel,
-.trump-badge--eichel { color: var(--eichel); }
-.announce-button--gruen,
-.trump-badge--gruen { color: var(--gruen); }
-.announce-button--rot,
-.trump-badge--rot { color: var(--rot); }
-.announce-button--schellen,
-.trump-badge--schellen { color: var(--schellen); }
+.announce-button--kreuz,
+.trump-badge--kreuz,
+.announce-button--pik,
+.trump-badge--pik { color: var(--text); }
+.announce-button--herz,
+.trump-badge--herz,
+.announce-button--karo,
+.trump-badge--karo { color: var(--red); }
 
 .announce-button:hover {
   transform: translateY(-2px) rotate(-1deg);
@@ -268,7 +294,7 @@ h1 {
 }
 
 .announce-button:focus-visible {
-  outline: 3px solid var(--schellen);
+  outline: 3px solid var(--gold);
   outline-offset: 3px;
 }
 
@@ -334,9 +360,9 @@ h1 {
   padding: 1rem;
   text-align: center;
   background: var(--card-bg);
-  border: 3px solid var(--schellen);
+  border: 3px solid var(--gold);
   border-radius: 1.5rem;
-  box-shadow: 0 4px 0 var(--eichel);
+  box-shadow: 0 4px 0 var(--brown);
   animation: pop-in 0.4s cubic-bezier(0.3, 1.6, 0.6, 1);
 }
 
@@ -350,8 +376,8 @@ h1 {
   font-weight: 800;
 }
 
-.result__outcome--win { color: var(--gruen); }
-.result__outcome--loss { color: var(--rot); }
+.result__outcome--win { color: var(--green); }
+.result__outcome--loss { color: var(--red); }
 
 .result__points {
   margin: 0.25rem 0 1rem;
@@ -360,7 +386,7 @@ h1 {
 
 .result__title {
   margin: 1.25rem 0 0.25rem;
-  color: var(--eichel);
+  color: var(--brown);
 }
 
 .result__scores {

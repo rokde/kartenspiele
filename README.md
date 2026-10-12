@@ -17,3 +17,10 @@ Then open `http://localhost:8000/`.
 ```sh
 node --test
 ```
+
+## Credits
+
+- Card faces: [CardMeister](https://cardmeister.github.io/) `<playing-card>` web component.
+  Source: https://github.com/cardmeister/cardmeister.github.io.
+  License: the Unlicense (public domain).
+  The app uses an unchanged copy in `vendor/cardmeister/` (see `vendor/cardmeister/LICENSE`).
