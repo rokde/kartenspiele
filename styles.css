@@ -283,7 +283,7 @@ h1 {
 
 .row__head {
   /* The width of the 4 capped stacks, so the label and the pile align with the centered row. */
-  max-width: calc(4 * 5rem + 3 * 0.75rem);
+  max-width: calc(4 * 5rem + 3 * clamp(0.25rem, 1vw, 0.75rem));
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -344,6 +344,8 @@ h1 {
   margin: 0;
   padding: 0;
   list-style: none;
+  /* The scroll to the own row stops above the fixed mute button. */
+  scroll-margin-bottom: 4rem;
 }
 
 /* On the human turn, stacks that are not legal look faded. Fade the whole stack, so the back does not show through. */
@@ -647,31 +649,30 @@ h1 {
   text-align: left;
 }
 
-/* Phone: the trick area fills the lower half, and the cards get the full width. */
+/* Phone: less space between the parts, so the trick and more of the own row fit on the screen. */
 @media (max-width: 30rem) {
   main {
     padding: 0.5rem 0.5rem 4.5rem;
   }
 
-  .row {
-    gap: 0.2rem;
+  .row__head {
+    margin: 0.5rem auto 0.25rem;
+  }
+
+  .status {
+    margin-top: 0.5rem;
   }
 
   .trick {
-    min-height: 12rem;
-    justify-content: center;
+    min-height: 8.5rem;
+  }
+
+  .trick__cards {
+    margin-top: 0.25rem;
   }
 
   .trick__card {
-    width: 5.5rem;
-  }
-
-  .trick__card .card__rank {
-    font-size: 1.5rem;
-  }
-
-  .trick__card .card__symbol {
-    font-size: 2.5rem;
+    width: 4rem;
   }
 }
 
