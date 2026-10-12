@@ -12,6 +12,7 @@ refreshes it after each merge.
 - Install: `none` (no dependencies). Run it once in each new worktree.
 - Test command: `node --test` (Node v24; tests cover pure logic; one test needs `python3` on PATH)
 - Start: `python3 -m http.server 8000 --bind 127.0.0.1`, then open http://localhost:8000/
+- Browser check: `playwright-cli` (global, `@playwright/cli`) is installed. UI-facing jobs must be checked in a real browser: start the server in the worktree on a free port (`--bind 127.0.0.1`), then use a named session, e.g. `playwright-cli -s=<job-id> open http://127.0.0.1:<port>/`, `resize 375 812` (phone) and `resize 1280 800` (desktop), `screenshot`, `snapshot`, `console`, `click <ref>`, then `close`. Save screenshots into the job folder (`factory/jobs/<id>/`), never into the repo. Stop the server afterwards. Builder: verify UI acceptance criteria this way. UI/UX reviewers and approver: look at the page at both sizes before the verdict.
 - Lint / format: `none yet`
 
 ## Sources
