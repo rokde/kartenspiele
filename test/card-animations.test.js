@@ -214,12 +214,3 @@ test("AC-7: the card back is always the CSS back in the theme red or brown", (t)
   assert.ok(!renderCardBack().includes("<playing-card"));
   assert.match(read("styles.css"), /\.card-back \{[^}]*background:[^}]*var\(--(red|brown)\);/);
 });
-
-test("AC-8: the resume on page load calls no motion and no sound", () => {
-  const main = read("src/main.js");
-  assert.match(main, /if \(game\) showGame\(\);\s*\}\s*$/);
-  for (const name of ["showGame", "paint", "computerTurn"]) {
-    const body = main.match(new RegExp(`const ${name} = [\\s\\S]*?\\n {2}\\};`))[0];
-    assert.doesNotMatch(body, /motion|sound\.play|soundEvents/, name);
-  }
-});

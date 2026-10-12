@@ -94,7 +94,14 @@ export function createMotion({
     return Promise.allSettled(open.map((a) => a.finished)).then(() => {});
   }
 
-  return { run };
+  // The player left the game screen. The waiting trick stays on the table until the next card.
+  function cancel() {
+    clearTimeout(timer);
+    timer = null;
+    winner = null;
+  }
+
+  return { run, cancel };
 }
 
 // The view for the game screen in `root`. `render` shows the current state, `onClear` notes a swept trick.
@@ -118,7 +125,7 @@ export function domView(root, render, onClear) {
         ghost.classList.add("ghost");
         ghost.setAttribute("aria-hidden", "true");
         Object.assign(ghost.style, { left: `${left}px`, top: `${top}px`, width: `${width}px`, height: `${height}px` });
-        document.body.append(ghost);
+        root.ownerDocument.body.append(ghost);
         return ghost;
       });
       root.querySelector(".trick__cards")?.replaceChildren();
