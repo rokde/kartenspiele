@@ -88,7 +88,7 @@ export function suitOf(card, trump) {
 }
 
 // Buben rank above all other cards, Kreuz-Bube highest (SUITS lists Kreuz first).
-function strength(card) {
+export function strength(card) {
   return card.rank === "B" ? 100 - SUITS.indexOf(card.suit) : ORDER.indexOf(card.rank);
 }
 
