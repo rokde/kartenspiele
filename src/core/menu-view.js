@@ -68,10 +68,17 @@ export function renderRules(game) {
     `<p>Quelle: ${link("https://de.wikipedia.org/wiki/Offiziersskat", "Offiziersskat bei Wikipedia")}</p></section>`;
 }
 
+// The other player left the online game.
+export function renderLeft() {
+  return `<div class="leave-notice"><p class="leave-notice__text" role="alert">Mitspieler hat das Spiel verlassen</p>` +
+    `<button type="button" class="game-button" data-action="back">Zum Menü</button></div>`;
+}
+
 // An online game has no restart and no rules page, so its bar has only "Zurück".
+// With `left`, the game shows the leave notice above the table.
 export function renderGameScreen(game, state, options = {}) {
   return `<div class="screen-bar"><button type="button" class="back-button" data-action="back">Zurück</button>` +
     (options.online ? "" : `<button type="button" class="back-button" data-action="rules">Regeln</button>` +
     `<button type="button" class="back-button" data-action="new">Neues Spiel</button>`) + `</div>` +
-    `<section class="game-screen">${game.render(state, options)}</section>`;
+    `<section class="game-screen">${options.left ? renderLeft() : ""}${game.render(state, options)}</section>`;
 }

@@ -1,5 +1,6 @@
 import { listGames, getGame } from "./core/registry.js";
-import { renderMenu, renderGameScreen, renderCredits, renderRules, renderRoomChoice, renderRoom, renderJoinForm } from "./core/menu-view.js";
+import { renderMenu, renderGameScreen, renderCredits, renderRules, renderRoomChoice, renderRoom, renderJoinForm, renderLeft } from "./core/menu-view.js";
+import { host as hostLink, join as joinLink, connectionMessage } from "./core/link.js";
 import { makeRoomCode, normalizeRoomCode } from "./core/room-code.js";
 import { save, load, isSaveOf } from "./core/storage.js";
 import { createSound, timeSounds } from "./core/sound.js";
@@ -8,6 +9,7 @@ import { hostSession, guestSession } from "./games/offiziersskat/online.js";
 import { newGame as newOnlineGame } from "./games/offiziersskat/rules.js";
 
 export const APP_TITLE = "Karten";
+export const JOIN_TIMEOUT = 15000;
 
 // Reading localStorage throws when the browser blocks it. Then the game runs without a save.
 const browserStorage = () => { try { return localStorage; } catch { return null; } };
@@ -21,8 +23,8 @@ export function startApp({
   addEventListener = globalThis.addEventListener,
   reducedMotion = matchMedia("(prefers-reduced-motion: reduce)").matches,
   seed = () => crypto.getRandomValues(new Uint32Array(1))[0],
-  // Loads link.js (and so PeerJS) only when a player opens or joins a room.
-  connect = (role, code, signal) => import("./core/link.js").then((link) => link[role](code, signal)),
+  // link.js loads PeerJS only when a player opens or joins a room.
+  connect = (role, code, signal) => (role === "host" ? hostLink : joinLink)(code, signal),
   clipboard = globalThis.navigator?.clipboard,
 } = {}) {
   const app = document.getElementById("app");
@@ -61,7 +63,7 @@ export function startApp({
   showMute();
   const paint = () => {
     if (!online) save(store, game.id, state);
-    show(renderGameScreen(game, state, { trickCleared: cleared, online: online?.role }));
+    show(renderGameScreen(game, state, { trickCleared: cleared, online: online?.role, left: online?.left }));
     (app.querySelector("[data-announce], [data-stack], [data-action=next]") ?? app.querySelector(".status"))?.focus();
   };
   // A short pause, so that the human can see each computer card.
@@ -95,39 +97,69 @@ export function startApp({
 
   // The open room: its code, an abort for the wait, and the link when it is open.
   let room = null;
+  // Clear the room first: our own close event and late link messages must find no room.
   const leaveRoom = () => {
-    room?.abort.abort();
-    room?.link?.close();
+    const current = room;
     room = null;
     online = null;
+    current?.abort.abort();
+    current?.link?.close();
+  };
+  // The other player left. The game stops, and the screen keeps only the way back to the menu.
+  const peerLeft = () => {
+    const { link } = room;
+    leave();
+    room = null;
+    online.left = true;
+    link.close();
+    if (state) paint();
+    else show(renderLeft());
+    app.querySelector(".leave-notice button")?.focus();
   };
   // The host deals the first game. hostSession does not report this start state, so the host renders it here.
-  const startOnline = (role, link) => {
+  const startOnline = (role, link, current) => {
     state = null;
     cleared = true;
+    const live = (fn) => (...args) => { if (room === current) fn(...args); };
+    link.onClose(live(peerLeft));
     if (role === "guest") {
-      online = { role, session: guestSession(link, go) };
+      online = { role, session: guestSession(link, live(go)) };
       return;
     }
     const first = newOnlineGame(seed(), "human");
-    online = { role, session: hostSession(link, first, go) };
+    online = { role, session: hostSession(link, first, live(go)) };
     go(first, null);
   };
   const move = (m) => (online ? online.session.move(m) : go(game.applyMove(state, m)));
-  const openRoom = async (role, code) => {
+  // Only the text changes, so the focus stays and a screen reader reads the live status.
+  const roomStatus = (text) => { app.querySelector(".room [role=status]").textContent = text; };
+  // The host waits for a person, so only the join has a timeout. The host tries up to 3 new codes.
+  const openRoom = async (role, code, retries = 3) => {
     const current = room = { code, abort: new AbortController() };
     const host = role === "host";
     show(renderRoom(code, host ? "Warte auf Mitspieler …" : "Verbinde …", { copy: host }));
+    const timeout = host ? null : setTimeout(() => {
+      if (room !== current) return;
+      const error = Object.assign(new Error("No answer from the room"), { type: "join-timeout" });
+      current.abort.abort(error);
+      roomStatus(connectionMessage(error));
+    }, JOIN_TIMEOUT);
     try {
       const link = await connect(role, code, current.abort.signal);
-      if (room !== current) return link.close();
+      clearTimeout(timeout);
+      if (room !== current || current.abort.signal.aborted) return link.close();
       current.link = link;
-      // Only the text changes, so the focus stays and a screen reader reads the live status.
-      app.querySelector(".room [role=status]").textContent = "Verbunden";
-      startOnline(host ? "host" : "guest", link);
-    } catch {
-      // shortcut: one message for all errors, S19 adds a message for each error.
-      if (room === current) app.querySelector(".room [role=status]").textContent = "Keine Verbindung. Bitte versuche es noch einmal.";
+      roomStatus("Verbunden");
+      startOnline(host ? "host" : "guest", link, current);
+    } catch (error) {
+      clearTimeout(timeout);
+      if (room !== current) return;
+      if (host && error?.type === "unavailable-id" && retries > 0) {
+        let next;
+        do next = makeRoomCode(); while (next === code);
+        return openRoom(role, next, retries - 1);
+      }
+      roomStatus(connectionMessage(error));
     }
   };
 
@@ -198,12 +230,16 @@ export function startApp({
   });
 
   // Another tab changed the save. This tab stops and shows the menu, so it never writes an old state.
+  // An online game writes no save, so it goes on.
   addEventListener("storage", (event) => {
-    if (!game || !isSaveOf(event, game.id) || !(rulesFromGame || app.querySelector(".game-screen"))) return;
+    if (online || !game || !isSaveOf(event, game.id) || !(rulesFromGame || app.querySelector(".game-screen"))) return;
     leave();
     rulesFromGame = false;
     show(menuHtml(`<p class="status" role="status">Das Spiel wurde in einem anderen Tab weitergespielt.</p>`));
   });
+
+  // A closed tab sends no close over WebRTC by itself, so the other player would wait for a long time.
+  addEventListener("pagehide", leaveRoom);
 
   document.title = APP_TITLE;
   app.innerHTML = menuHtml();

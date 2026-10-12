@@ -138,12 +138,14 @@ function renderTrick(state, trickCleared, names) {
   return `<div class="trick">${deck}<ul class="trick__cards" aria-label="Stich">${cards}</ul>${caption}</div>`;
 }
 
-function renderAnnouncement(state, names) {
+function renderAnnouncement(state, names, left) {
   const vorhand = `<p class="announce__vorhand">Vorhand: ${names[state.vorhand]}</p>`;
   if (state.trump) {
     return vorhand + `<p class="trump-badge trump-badge--${state.trump}" role="status" tabindex="-1">${symbol(state.trump)}Trumpf: ${GAME_NAMES[state.trump]}</p>`;
   }
-  if (state.vorhand !== "human") return vorhand;
+  if (left) return vorhand;
+  // Only the online Mitspieler can be Vorhand with no trump. The computer announces at once.
+  if (state.vorhand !== "human") return vorhand + `<p class="status" role="status">${names.computer} sagt an …</p>`;
   const buttons = rules.GAMES.map((game) =>
     `<button type="button" class="announce-button announce-button--${game}" data-announce="${game}">` +
     `${symbol(game)}${GAME_NAMES[game]}</button>`).join("");
@@ -154,11 +156,11 @@ const OUTCOMES = { win: "Gewonnen!", loss: "Verloren" };
 
 // The button names the result text, so a screen reader reads it with the focus. Newest game first.
 // Only the host starts the next online game.
-function renderResult(state, names, online) {
+function renderResult(state, names, online, left) {
   const { human, computer } = rules.points(state);
   const outcome = rules.winner(state) === "human" ? "win" : "loss";
   const rows = state.scores.map((s) => `<li>Du ${s.human} : ${s.computer} ${names.computer}</li>`).reverse().join("");
-  const next = online === "guest"
+  const next = left ? "" : online === "guest"
     ? `<p class="result__wait" role="status">Warte auf den Gastgeber …</p>`
     : `<button type="button" class="game-button" data-action="next" aria-describedby="result-outcome result-points">Nächstes Spiel</button>`;
   return `<section class="result" aria-label="Ergebnis">` +
@@ -170,16 +172,17 @@ function renderResult(state, names, online) {
 }
 
 // `online` is "host" or "guest" in a game with 2 browsers. The guest state is the view from online.js.
-export function render(state, { trickCleared = false, online = null } = {}) {
+// `left` means that the other player left: the table stays, but no button or turn text.
+export function render(state, { trickCleared = false, online = null, left = false } = {}) {
   const names = online ? ONLINE_NAMES : PLAYER_NAMES;
   const playing = state.trump !== null;
-  const turn = playing && state.turn === "human" && !rules.isOver(state);
+  const turn = !left && playing && state.turn === "human" && !rules.isOver(state);
   const legal = !turn ? [] : online === "guest" ? state.legal : rules.legalStacksFor(state);
   return `<h2>${name}</h2><div class="table">` +
-    `<div class="announce">${renderAnnouncement(state, names)}</div>` +
+    `<div class="announce">${renderAnnouncement(state, names, left)}</div>` +
     renderRow(state, "computer", names) +
-    (playing ? `<p class="status" role="status" tabindex="-1">${renderStatus(state, names)}</p>` : "") +
+    (playing && !left ? `<p class="status" role="status" tabindex="-1">${renderStatus(state, names)}</p>` : "") +
     renderTrick(state, trickCleared, names) +
     renderRow(state, "human", names, legal) +
-    `</div>` + (rules.isOver(state) ? renderResult(state, names, online) : "");
+    `</div>` + (rules.isOver(state) ? renderResult(state, names, online, left) : "");
 }
