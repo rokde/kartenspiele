@@ -3,7 +3,7 @@ import { SUIT_NAMES, SUIT_SYMBOLS, cardName } from "../../core/cards.js";
 import * as rules from "./rules.js";
 import { aiMove } from "./ai.js";
 
-export { applyMove, isOver } from "./rules.js";
+export { applyMove, isOver, restore } from "./rules.js";
 export { aiMove };
 
 export const id = "offiziersskat";
@@ -14,7 +14,10 @@ const symbol = (game) => (SUIT_SYMBOLS[game] ? `<span aria-hidden="true">${SUIT_
 
 const announceForComputer = (state) => (state.vorhand === "computer" ? rules.applyMove(state, aiMove(state)) : state);
 
-export const newGame = (seed, dealer) => announceForComputer(rules.newGame(seed, dealer));
+export const newGame = (seed, dealer, scores) => announceForComputer(rules.newGame(seed, dealer, scores));
+
+// "Neues Spiel": stop the current game. The dealer changes and the score list stays, with no entry for the stopped game.
+export const restart = (state, seed) => newGame(seed, state.dealer === "human" ? "computer" : "human", state.scores);
 
 export const nextGame = (state, seed) => announceForComputer(rules.nextGame(state, seed));
 
