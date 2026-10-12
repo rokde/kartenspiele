@@ -1,4 +1,4 @@
-import { SUITS, createDeck, shuffle } from "../../core/cards.js";
+import { SUITS, RANKS, createDeck, shuffle } from "../../core/cards.js";
 
 export const GAMES = [...SUITS, "grand"];
 export const CARD_POINTS = { A: 11, 10: 10, K: 4, D: 3, B: 2, 9: 0, 8: 0, 7: 0 };
@@ -115,4 +115,53 @@ export function playFromStack(stacks, index) {
   if (!up) throw new Error(`Stack ${index} has no face-up card`);
   const next = stacks.map((stack, i) => (i === index ? { down: null, up: down } : { ...stack }));
   return { card: up, stacks: next };
+}
+
+const ROLES = ["human", "computer"];
+
+// Saved data is untrusted. Returns a clean copy of a valid state, or null.
+export function restore(data) {
+  try {
+    return check(data);
+  } catch {
+    return null;
+  }
+}
+
+function check(data) {
+  const fail = () => { throw new Error("Invalid state"); };
+  const ok = (condition) => condition || fail();
+  const list = (value, max) => (ok(Array.isArray(value) && value.length <= max), value);
+  const role = (value) => (ok(ROLES.includes(value)), value);
+  const cards = [];
+  const card = (value) => {
+    if (value === null) return null;
+    ok(SUITS.includes(value?.suit) && RANKS.includes(value.rank));
+    cards.push(`${value.suit}:${value.rank}`);
+    return { suit: value.suit, rank: value.rank };
+  };
+  const played = (value) => ({ player: role(value?.player), card: card(value.card) ?? fail() });
+  const stacks = (value) => list(value?.stacks, 8).map((stack) => ({ down: card(stack?.down), up: card(stack.up) }));
+  const score = (value) => {
+    const n = (x) => (ok(Number.isInteger(x) && x >= 0 && x <= 120), x);
+    return { human: n(value?.human), computer: n(value.computer) };
+  };
+
+  ok(typeof data === "object" && data !== null && Number.isInteger(data.seed));
+  ok(data.trump === null || GAMES.includes(data.trump));
+  const state = {
+    seed: data.seed, dealer: role(data.dealer), vorhand: role(data.vorhand), scores: list(data.scores, Infinity).map(score),
+    trump: data.trump, turn: role(data.turn), trick: list(data.trick, 1).map(played),
+    tricks: list(data.tricks, 16).map((t) => ({ winner: role(t?.winner), cards: list(t.cards, 2).map(played) })),
+    players: { human: { stacks: stacks(data.players?.human) }, computer: { stacks: stacks(data.players.computer) } },
+    stock: list(data.stock, 32).map(card),
+  };
+  ok(state.vorhand === other(state.dealer));
+  ok(state.players.human.stacks.length === 8 && state.players.computer.stacks.length === 8);
+  ok(state.tricks.every((t) => t.cards.length === 2) && !state.stock.includes(null));
+  // Before the announcement 20 cards wait in the stock. After it, all cards are dealt.
+  ok(state.stock.length === (state.trump === null ? 20 : 0));
+  ok(state.trump !== null || (state.trick.length === 0 && state.tricks.length === 0));
+  ok(cards.length === 32 && new Set(cards).size === 32);
+  return state;
 }

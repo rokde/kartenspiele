@@ -6,6 +6,7 @@ export function renderMenu(games) {
 }
 
 export function renderGameScreen(game, state) {
-  return `<button type="button" class="back-button" data-action="back">Zurück</button>` +
+  return `<div class="screen-bar"><button type="button" class="back-button" data-action="back">Zurück</button>` +
+    `<button type="button" class="back-button" data-action="new">Neues Spiel</button></div>` +
     `<section class="game-screen">${game.render(state)}</section>`;
 }

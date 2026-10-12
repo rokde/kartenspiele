@@ -1,5 +1,6 @@
 import { listGames, getGame } from "./core/registry.js";
 import { renderMenu, renderGameScreen } from "./core/menu-view.js";
+import { save, load } from "./core/storage.js";
 
 export const APP_TITLE = "Karten";
 
@@ -16,7 +17,11 @@ if (typeof document !== "undefined") {
   let state;
   let timer;
   const seed = () => crypto.getRandomValues(new Uint32Array(1))[0];
+  // Reading localStorage throws when the browser blocks it. Then the game runs without a save.
+  const store = (() => { try { return localStorage; } catch { return null; } })();
+  const saved = (g) => g.restore(load(store, g.id));
   const showGame = () => {
+    save(store, game.id, state);
     show(renderGameScreen(game, state));
     (app.querySelector("[data-announce], [data-stack], [data-action=next]") ?? app.querySelector(".status"))?.focus();
     // A short pause, so that the human can see each computer card.
@@ -36,7 +41,11 @@ if (typeof document !== "undefined") {
       show(menuHtml());
     } else if (button.dataset.gameId) {
       game = getGame(button.dataset.gameId);
-      state = game.newGame(seed());
+      state = saved(game) ?? game.newGame(seed());
+      showGame();
+    } else if (button.dataset.action === "new") {
+      clearTimeout(timer);
+      state = game.restart(state, seed());
       showGame();
     } else if (button.dataset.action === "next") {
       state = game.nextGame(state, seed());
@@ -52,4 +61,7 @@ if (typeof document !== "undefined") {
 
   document.title = APP_TITLE;
   app.innerHTML = menuHtml();
+  // Resume the first game with a valid save.
+  game = listGames().find((g) => (state = saved(g)));
+  if (game) showGame();
 }

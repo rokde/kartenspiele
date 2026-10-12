@@ -41,7 +41,7 @@ test("python3 -m http.server serves the page, styles, and modules", { timeout: 1
   }
   const port = log.match(/port (\d+)/)[1];
   for (const path of ["/", "/src/main.js", "/styles.css", "/src/core/cards.js", "/src/core/card-view.js",
-    "/src/core/registry.js", "/src/core/menu-view.js", "/vendor/cardmeister/elements.cardmeister.full.js", "/src/games/offiziersskat/index.js",
+    "/src/core/registry.js", "/src/core/menu-view.js", "/src/core/storage.js", "/vendor/cardmeister/elements.cardmeister.full.js", "/src/games/offiziersskat/index.js",
     "/src/games/offiziersskat/rules.js", "/src/games/offiziersskat/ai.js"]) {
     const res = await fetch(`http://127.0.0.1:${port}${path}`);
     assert.equal(res.status, 200, path);
