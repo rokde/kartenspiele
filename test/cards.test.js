@@ -34,8 +34,8 @@ test("AC-3: different seeds give different orders, not the deck order", () => {
 });
 
 test("AC-4: cardName gives German names, 32 different", () => {
-  assert.equal(cardName({ suit: "eichel", rank: "A" }), "Eichel Ass");
-  assert.equal(cardName({ suit: "gruen", rank: "10" }), "Grün Zehn");
+  assert.equal(cardName({ suit: "kreuz", rank: "A" }), "Kreuz Ass");
+  assert.equal(cardName({ suit: "pik", rank: "10" }), "Pik Zehn");
   assert.equal(new Set(createDeck().map(cardName)).size, 32);
 });
 

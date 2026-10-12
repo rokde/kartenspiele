@@ -1,7 +1,7 @@
 import { SUITS, createDeck, shuffle } from "../../core/cards.js";
 
 export const GAMES = [...SUITS, "grand"];
-export const CARD_POINTS = { A: 11, 10: 10, K: 4, O: 3, U: 2, 9: 0, 8: 0, 7: 0 };
+export const CARD_POINTS = { A: 11, 10: 10, K: 4, D: 3, B: 2, 9: 0, 8: 0, 7: 0 };
 
 // The dealer deals in steps of 4 cards: [role, first stack, side]. Vorhand is the non-dealer.
 const FIRST_DEAL = [["vorhand", 0, "down"], ["dealer", 0, "down"], ["vorhand", 0, "up"]];
@@ -77,19 +77,19 @@ function play(state, index) {
   return isOver(next) ? { ...next, scores: [...state.scores, points(next)] } : next;
 }
 
-const ORDER = ["7", "8", "9", "O", "K", "10", "A"];
+const ORDER = ["7", "8", "9", "D", "K", "10", "A"];
 
 export function isTrump(card, trump) {
-  return card.rank === "U" || card.suit === trump;
+  return card.rank === "B" || card.suit === trump;
 }
 
 export function suitOf(card, trump) {
   return isTrump(card, trump) ? "trump" : card.suit;
 }
 
-// Unter rank above all other cards, Eichel-U highest (SUITS lists Eichel first).
+// Buben rank above all other cards, Kreuz-Bube highest (SUITS lists Kreuz first).
 function strength(card) {
-  return card.rank === "U" ? 100 - SUITS.indexOf(card.suit) : ORDER.indexOf(card.rank);
+  return card.rank === "B" ? 100 - SUITS.indexOf(card.suit) : ORDER.indexOf(card.rank);
 }
 
 export function beats(card, other, trump) {

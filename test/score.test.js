@@ -7,7 +7,7 @@ import * as game from "../src/games/offiziersskat/index.js";
 const step = (state) => rules.applyMove(state, aiMove(state));
 const count = (html, text) => html.split(text).length - 1;
 const OUTCOMES = ["Gewonnen!", "Verloren", "Unentschieden"];
-// "rot:A" -> { suit: "rot", rank: "A" }
+// "herz:A" -> { suit: "herz", rank: "A" }
 const c = (s) => {
   const [suit, rank] = s.split(":");
   return { suit, rank };
@@ -23,12 +23,12 @@ function playOut(state) {
 
 // A finished game with the given tricks, filled up to 16 with tricks of 0 points for the computer.
 function finished(tricks, scores = [], dealer = "computer") {
-  const filler = Array.from({ length: 16 - tricks.length }, () => trick("computer", "rot:7", "rot:8"));
-  return { ...rules.newGame(1, dealer, scores), trump: "rot", tricks: [...tricks, ...filler] };
+  const filler = Array.from({ length: 16 - tricks.length }, () => trick("computer", "herz:7", "herz:8"));
+  return { ...rules.newGame(1, dealer, scores), trump: "herz", tricks: [...tricks, ...filler] };
 }
 
 test("AC-1: points adds the card points of the tricks of each player", () => {
-  const state = { ...rules.newGame(1), tricks: [trick("human", "rot:A", "rot:10"), trick("computer", "gruen:K", "eichel:U"), trick("human", "rot:7", "schellen:O")] };
+  const state = { ...rules.newGame(1), tricks: [trick("human", "herz:A", "herz:10"), trick("computer", "pik:K", "kreuz:B"), trick("human", "herz:7", "karo:D")] };
   assert.deepEqual(rules.points(state), { human: 24, computer: 6 });
   assert.deepEqual(rules.points(rules.newGame(1)), { human: 0, computer: 0 });
   for (let seed = 0; seed < 50; seed++) {
@@ -96,11 +96,11 @@ test("AC-5: render shows the result panel only when the game is over", () => {
 
 test("AC-5: render shows the points, the matching result, one row per game, and the next button", () => {
   const scores = [{ human: 10, computer: 110 }, { human: 61, computer: 59 }];
-  const sixty = [trick("human", "rot:A", "rot:10"), trick("human", "gruen:K", "gruen:O"), trick("human", "eichel:A", "eichel:10"), trick("human", "schellen:A", "rot:9")];
+  const sixty = [trick("human", "herz:A", "herz:10"), trick("human", "pik:K", "pik:D"), trick("human", "kreuz:A", "kreuz:10"), trick("human", "karo:A", "herz:9")];
   const cases = [
-    [[...sixty, trick("human", "schellen:K", "rot:8")], 64, "Gewonnen!"],
+    [[...sixty, trick("human", "karo:K", "herz:8")], 64, "Gewonnen!"],
     [[...sixty, ...sixty.map((t) => ({ ...t, winner: "computer" }))], 60, "Verloren"],
-    [[trick("human", "rot:A", "rot:10"), ...sixty.map((t) => ({ ...t, winner: "computer" }))], 21, "Verloren"],
+    [[trick("human", "herz:A", "herz:10"), ...sixty.map((t) => ({ ...t, winner: "computer" }))], 21, "Verloren"],
   ];
   for (const [tricks, human, expected] of cases) {
     const state = finished(tricks, scores);

@@ -1,12 +1,12 @@
-export const SUITS = ["eichel", "gruen", "rot", "schellen"];
-export const RANKS = ["7", "8", "9", "10", "U", "O", "K", "A"];
+export const SUITS = ["kreuz", "pik", "herz", "karo"];
+export const RANKS = ["7", "8", "9", "10", "B", "D", "K", "A"];
 
-export const SUIT_SYMBOLS = { eichel: "🌰", gruen: "🍃", rot: "♥", schellen: "🔔" };
+export const SUIT_SYMBOLS = { kreuz: "♣", pik: "♠", herz: "♥", karo: "♦" };
 
-export const SUIT_NAMES = { eichel: "Eichel", gruen: "Grün", rot: "Rot", schellen: "Schellen" };
+export const SUIT_NAMES = { kreuz: "Kreuz", pik: "Pik", herz: "Herz", karo: "Karo" };
 const RANK_NAMES = {
   7: "Sieben", 8: "Acht", 9: "Neun", 10: "Zehn",
-  U: "Unter", O: "Ober", K: "König", A: "Ass",
+  B: "Bube", D: "Dame", K: "König", A: "Ass",
 };
 
 export function createDeck() {

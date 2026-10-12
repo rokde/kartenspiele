@@ -4,8 +4,8 @@ import * as rules from "../src/games/offiziersskat/rules.js";
 import { aiMove } from "../src/games/offiziersskat/ai.js";
 import * as game from "../src/games/offiziersskat/index.js";
 
-const GAMES = ["eichel", "gruen", "rot", "schellen", "grand"];
-const LABELS = ["Eichel", "Grün", "Rot", "Schellen", "Grand"];
+const GAMES = ["kreuz", "pik", "herz", "karo", "grand"];
+const LABELS = ["Kreuz", "Pik", "Herz", "Karo", "Grand"];
 const announceButtons = (html) => [...html.matchAll(/<button[^>]*data-announce="([^"]+)"[^>]*>(.*?)<\/button>/g)];
 const count = (html, text) => html.split(text).length - 1;
 
@@ -14,7 +14,7 @@ function stateWith(ups) {
   const state = rules.newGame(1, "human");
   const stacks = ups.map((up) => {
     const [suit, rank] = up.split(":");
-    return { down: { suit: "rot", rank: "7" }, up: { suit, rank } };
+    return { down: { suit: "herz", rank: "7" }, up: { suit, rank } };
   });
   return { ...state, players: { ...state.players, computer: { stacks } } };
 }
@@ -43,24 +43,24 @@ test("AC-3: applyMove rejects an unknown game, an unknown type, and a second ann
   const state = rules.newGame(3, "computer");
   assert.throws(() => rules.applyMove(state, { type: "announce", game: "null" }));
   assert.throws(() => rules.applyMove(state, { type: "announce" }));
-  assert.throws(() => rules.applyMove(state, { type: "play", game: "rot" }));
-  const announced = rules.applyMove(state, { type: "announce", game: "rot" });
-  assert.throws(() => rules.applyMove(announced, { type: "announce", game: "gruen" }));
+  assert.throws(() => rules.applyMove(state, { type: "play", game: "herz" }));
+  const announced = rules.applyMove(state, { type: "announce", game: "herz" });
+  assert.throws(() => rules.applyMove(announced, { type: "announce", game: "pik" }));
 });
 
-test("AC-4: aiMove selects the suit with the most cards and ignores the Unter", () => {
-  const state = stateWith(["rot:7", "rot:8", "rot:9", "eichel:A", "eichel:10", "gruen:U", "gruen:U", "gruen:U"]);
-  assert.deepEqual(aiMove(state), { type: "announce", game: "rot" });
+test("AC-4: aiMove selects the suit with the most cards and ignores the Buben", () => {
+  const state = stateWith(["herz:7", "herz:8", "herz:9", "kreuz:A", "kreuz:10", "pik:B", "pik:B", "pik:B"]);
+  assert.deepEqual(aiMove(state), { type: "announce", game: "herz" });
 });
 
 test("AC-4: aiMove breaks a count tie with the card points", () => {
-  const state = stateWith(["eichel:7", "eichel:8", "schellen:A", "schellen:9", "gruen:K", "rot:O", "rot:U", "eichel:U"]);
-  assert.deepEqual(aiMove(state), { type: "announce", game: "schellen" });
+  const state = stateWith(["kreuz:7", "kreuz:8", "karo:A", "karo:9", "pik:K", "herz:D", "herz:B", "kreuz:B"]);
+  assert.deepEqual(aiMove(state), { type: "announce", game: "karo" });
 });
 
 test("AC-4: aiMove breaks a second tie with the SUITS order and never selects grand", () => {
-  const state = stateWith(["rot:A", "rot:7", "gruen:A", "gruen:8", "schellen:U", "eichel:U", "rot:U", "gruen:U"]);
-  assert.deepEqual(aiMove(state), { type: "announce", game: "gruen" });
+  const state = stateWith(["herz:A", "herz:7", "pik:A", "pik:8", "karo:B", "kreuz:B", "herz:B", "pik:B"]);
+  assert.deepEqual(aiMove(state), { type: "announce", game: "pik" });
   for (let seed = 0; seed < 200; seed++) {
     assert.notEqual(aiMove(rules.newGame(seed)).game, "grand");
   }
@@ -78,7 +78,7 @@ test("AC-6: render shows the 5 announce buttons only when the human must announc
   const buttons = announceButtons(game.render(state));
   assert.deepEqual(buttons.map((m) => m[1]), GAMES);
   assert.deepEqual(buttons.map((m) => m[2].replace(/<span[^>]*>.*?<\/span>\s*/, "")), LABELS);
-  assert.equal(announceButtons(game.render(game.applyMove(state, { type: "announce", game: "rot" }))).length, 0);
+  assert.equal(announceButtons(game.render(game.applyMove(state, { type: "announce", game: "herz" }))).length, 0);
   assert.equal(announceButtons(game.render(game.newGame(2, "human"))).length, 0);
   assert.equal(announceButtons(game.render({ ...game.newGame(2, "human"), trump: null })).length, 0);
 });
@@ -96,5 +96,5 @@ test("AC-7: render shows Vorhand, the trump name, and all cards", () => {
   }
   const computer = game.render(game.newGame(2, "human"));
   assert.ok(computer.includes("Vorhand: Computer"));
-  assert.match(computer, /Trumpf: (Eichel|Grün|Rot|Schellen)</);
+  assert.match(computer, /Trumpf: (Kreuz|Pik|Herz|Karo)</);
 });

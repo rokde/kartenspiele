@@ -7,7 +7,7 @@ import { getGame } from "../src/core/registry.js";
 import { renderGameScreen } from "../src/core/menu-view.js";
 
 // The full deal comes after the announcement.
-const newGame = (seed) => applyMove(dealt(seed), { type: "announce", game: "rot" });
+const newGame = (seed) => applyMove(dealt(seed), { type: "announce", game: "herz" });
 const allStacks = (state) => [...state.players.human.stacks, ...state.players.computer.stacks];
 const key = (card) => `${card.suit}-${card.rank}`;
 const count = (html, text) => html.split(text).length - 1;
