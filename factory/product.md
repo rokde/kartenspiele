@@ -73,4 +73,4 @@ One player gets a card game site that runs only in the browser. The player plays
 15. S11 Rules page: a short German rules text (the Wikipedia rule set above, with the stepwise deal and the 60:60 rule) is available from the game screen, so that the human can check the rule set. Needs S12.
 
 ## Open questions
-- The linked `Svg-cards-2.0.svg` and the 4 symbols are a French-suited deck (Kreuz, Pik, Herz, Karo). The plan switches to this deck with German names. Do you want a deck with real German suits (Eichel, Grün, Rot, Schellen) instead? Then S13 needs another free image set, and the plan keeps the current suits until we find one.
+- (answered 2026-10-12) Deck: the human chose the French-suited SVG deck (Kreuz, Pik, Herz, Karo) with German names. Plan order confirmed as above.
