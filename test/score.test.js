@@ -22,9 +22,9 @@ function playOut(state) {
 }
 
 // A finished game with the given tricks, filled up to 16 with tricks of 0 points for the computer.
-function finished(tricks, scores = []) {
+function finished(tricks, scores = [], dealer = "computer") {
   const filler = Array.from({ length: 16 - tricks.length }, () => trick("computer", "rot:7", "rot:8"));
-  return { ...rules.newGame(1, "computer", scores), trump: "rot", tricks: [...tricks, ...filler] };
+  return { ...rules.newGame(1, dealer, scores), trump: "rot", tricks: [...tricks, ...filler] };
 }
 
 test("AC-1: points adds the card points of the tricks of each player", () => {
@@ -99,7 +99,7 @@ test("AC-5: render shows the points, the matching result, one row per game, and 
   const sixty = [trick("human", "rot:A", "rot:10"), trick("human", "gruen:K", "gruen:O"), trick("human", "eichel:A", "eichel:10"), trick("human", "schellen:A", "rot:9")];
   const cases = [
     [[...sixty, trick("human", "schellen:K", "rot:8")], 64, "Gewonnen!"],
-    [[...sixty, ...sixty.map((t) => ({ ...t, winner: "computer" }))], 60, "Unentschieden"],
+    [[...sixty, ...sixty.map((t) => ({ ...t, winner: "computer" }))], 60, "Verloren"],
     [[trick("human", "rot:A", "rot:10"), ...sixty.map((t) => ({ ...t, winner: "computer" }))], 21, "Verloren"],
   ];
   for (const [tricks, human, expected] of cases) {

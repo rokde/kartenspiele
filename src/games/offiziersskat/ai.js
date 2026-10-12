@@ -1,13 +1,13 @@
 import { SUITS } from "../../core/cards.js";
 import { CARD_POINTS, legalStacksFor } from "./rules.js";
 
-// Strength of a suit: first the card count, then the card points. The Unter are trump in every game, so skip them.
+// Announce from the open cards only (the first deal). Strength of a suit: first the card count, then the card points. The Unter are trump in every game, so skip them.
 export function aiMove(state, random = Math.random) {
   if (state.trump !== null) {
     const legal = legalStacksFor(state);
     return { type: "play", stack: legal[Math.floor(random() * legal.length)] };
   }
-  const cards = state.players.computer.stacks.map((stack) => stack.up).filter((card) => card.rank !== "U");
+  const cards = state.players.computer.stacks.map((stack) => stack.up).filter((card) => card && card.rank !== "U");
   const strength = (suit) => {
     const own = cards.filter((card) => card.suit === suit);
     return [own.length, own.reduce((sum, card) => sum + CARD_POINTS[card.rank], 0)];

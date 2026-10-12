@@ -210,6 +210,11 @@ h1 {
   box-shadow: 0 2px 4px rgb(59 36 20 / 0.2);
 }
 
+/* Before the open card is dealt, the back stays at its place below the card (150% card height - 120%). */
+.card-back:first-child {
+  margin-top: 30%;
+}
+
 .announce {
   display: flex;
   flex-direction: column;
@@ -347,7 +352,6 @@ h1 {
 
 .result__outcome--win { color: var(--gruen); }
 .result__outcome--loss { color: var(--rot); }
-.result__outcome--draw { color: var(--schellen); }
 
 .result__points {
   margin: 0.25rem 0 1rem;

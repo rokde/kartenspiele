@@ -1,11 +1,13 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createDeck, cardName } from "../src/core/cards.js";
-import { newGame } from "../src/games/offiziersskat/rules.js";
+import { newGame as dealt, applyMove } from "../src/games/offiziersskat/rules.js";
 import { render } from "../src/games/offiziersskat/index.js";
 import { getGame } from "../src/core/registry.js";
 import { renderGameScreen } from "../src/core/menu-view.js";
 
+// The full deal comes after the announcement.
+const newGame = (seed) => applyMove(dealt(seed), { type: "announce", game: "rot" });
 const allStacks = (state) => [...state.players.human.stacks, ...state.players.computer.stacks];
 const key = (card) => `${card.suit}-${card.rank}`;
 const count = (html, text) => html.split(text).length - 1;
@@ -22,6 +24,7 @@ test("AC-1: newGame deals 8 stacks to each player with all 32 cards once", () =>
 });
 
 test("AC-2: the same seed gives the same deal, other seeds give other deals", () => {
+  assert.deepEqual(dealt(7), dealt(7));
   assert.deepEqual(newGame(7), newGame(7));
   assert.notDeepEqual(newGame(1).players, newGame(2).players);
 });
@@ -50,9 +53,9 @@ test("AC-5: render shows 16 card backs and hides the down cards", () => {
   }
 });
 
-test("AC-6: the game screen shows Zurück and 16 open cards, no stub", () => {
+test("AC-6: the game screen shows Zurück and the 4 open cards of Vorhand, no stub", () => {
   const html = renderGameScreen(getGame("offiziersskat"), getGame("offiziersskat").newGame(5));
   assert.match(html, /<button[^>]*data-action="back"[^>]*>Zurück<\/button>/);
-  assert.equal(count(html, 'class="card card--'), 16);
+  assert.equal(count(html, 'class="card card--'), 4);
   assert.ok(!html.includes("Kommt bald"));
 });

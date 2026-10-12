@@ -3,17 +3,31 @@ import { SUITS, createDeck, shuffle } from "../../core/cards.js";
 export const GAMES = [...SUITS, "grand"];
 export const CARD_POINTS = { A: 11, 10: 10, K: 4, O: 3, U: 2, 9: 0, 8: 0, 7: 0 };
 
-// Fixed deal: cards 0-15 go to the human, 16-31 to the computer, two cards for each stack.
-// The non-dealer is Vorhand.
+// The dealer deals in steps of 4 cards: [role, first stack, side]. Vorhand is the non-dealer.
+const FIRST_DEAL = [["vorhand", 0, "down"], ["dealer", 0, "down"], ["vorhand", 0, "up"]];
+const REST_DEAL = [["dealer", 0, "up"], ["vorhand", 4, "down"], ["dealer", 4, "down"], ["vorhand", 4, "up"], ["dealer", 4, "up"]];
+
+// Vorhand announces from the first deal only. The undealt cards stay hidden in the stock.
 export function newGame(seed, dealer = "computer", scores = []) {
   const vorhand = other(dealer);
-  const cards = shuffle(createDeck(), seed);
-  const stacks = (from) =>
-    Array.from({ length: 8 }, (_, i) => ({ down: cards[from + 2 * i], up: cards[from + 2 * i + 1] }));
-  return {
+  const empty = () => Array.from({ length: 8 }, () => ({ down: null, up: null }));
+  return deal({
     seed, dealer, vorhand, scores, trump: null, turn: vorhand, trick: [], tricks: [],
-    players: { human: { stacks: stacks(0) }, computer: { stacks: stacks(16) } },
-  };
+    players: { human: { stacks: empty() }, computer: { stacks: empty() } }, stock: shuffle(createDeck(), seed),
+  }, FIRST_DEAL);
+}
+
+function deal(state, steps) {
+  const players = { ...state.players };
+  let stock = state.stock;
+  for (const [role, first, side] of steps) {
+    const player = state[role];
+    const cards = stock.slice(0, 4);
+    stock = stock.slice(4);
+    players[player] = { stacks: players[player].stacks.map((stack, i) =>
+      (i >= first && i < first + 4 ? { ...stack, [side]: cards[i - first] } : stack)) };
+  }
+  return { ...state, players, stock };
 }
 
 export const isOver = (state) => state.tricks.length === 16;
@@ -31,12 +45,17 @@ export function points(state) {
   return sum;
 }
 
+// The announcer (Vorhand) wins with 61 points or more. With 60:60 the opponent wins.
+export function winner(state) {
+  return points(state)[state.vorhand] >= 61 ? state.vorhand : other(state.vorhand);
+}
+
 export function applyMove(state, move) {
   if (move.type === "play") return play(state, move.stack);
   if (move.type !== "announce") throw new Error(`Unknown move type: ${move.type}`);
   if (state.trump !== null) throw new Error("The game is already announced");
   if (!GAMES.includes(move.game)) throw new Error(`Unknown game: ${move.game}`);
-  return { ...state, trump: move.game };
+  return deal({ ...state, trump: move.game }, REST_DEAL);
 }
 
 // The legal stacks of the player in turn, for the lead card of the open trick.
