@@ -1,7 +1,7 @@
 import { listGames, getGame } from "./core/registry.js";
 import { renderMenu, renderGameScreen, renderCredits, renderRules } from "./core/menu-view.js";
 import { save, load, isSaveOf } from "./core/storage.js";
-import { createSound } from "./core/sound.js";
+import { createSound, timeSounds } from "./core/sound.js";
 import { createMotion, domView } from "./core/motion.js";
 
 export const APP_TITLE = "Karten";
@@ -37,7 +37,7 @@ export function startApp({
   let rulesFromGame = false;
   const motion = createMotion({ reduced: reducedMotion, setTimeout, clearTimeout });
   const saved = (g) => g.restore(load(store, g.id));
-  const sound = createSound(store);
+  const sound = createSound(store, { setTimeout, clearTimeout });
   for (const type of ["pointerdown", "keydown", "click"]) document.addEventListener(type, sound.unlock, { capture: true });
   const mute = document.getElementById("mute");
   const showMute = () => {
@@ -73,10 +73,13 @@ export function startApp({
   const go = async (next, prev = state) => {
     clearTimeout(timer);
     const run = ++runs;
-    for (const event of game.soundEvents(prev, next)) sound.play(event);
+    sound.stop();
     state = next;
     cleared = false;
-    await motion.run(game.motionEvents(prev, next), view);
+    const motions = [];
+    const done = motion.run(game.motionEvents(prev, next), view, ({ type }, delay, duration) => motions.push({ type, delay, duration }));
+    for (const [event, timing] of timeSounds(game.soundEvents(prev, next), motions)) sound.play(event, timing);
+    await done;
     // The computer waits until the animation is done.
     if (run === runs) computerTurn();
   };
@@ -85,6 +88,7 @@ export function startApp({
   const leave = () => {
     clearTimeout(timer);
     motion.cancel();
+    sound.stop();
     runs++;
   };
 

@@ -242,3 +242,27 @@ test("the resume and the return to a saved game play no sound and no motion", as
   else await t.click("data-stack=");
   assert.ok(played.length > 0);
 });
+
+test("S20 AC-6: a new run and leaving the game screen pause the sound and leave no sound timer", async (context) => {
+  const log = [];
+  const savedAudio = globalThis.Audio;
+  globalThis.Audio = class {
+    constructor(src) { this.src = src; }
+    play() { log.push(["play", this.src]); }
+    pause() { log.push(["pause", this.src]); }
+  };
+  context.after(() => (globalThis.Audio = savedAudio));
+  const t = setup();
+  for (const fn of t.document.listeners.click) fn();
+  const deal = "assets/sounds/shuffle.mp3";
+  // With reduced motion, the deal sound stops after DURATIONS.deal.
+  await t.click('data-game-id="offiziersskat"');
+  assert.deepEqual(log, [["play", deal]]);
+  assert.equal(t.clock.pending(300), 1);
+  await t.click('data-action="new"');
+  assert.deepEqual(log, [["play", deal], ["pause", deal], ["play", deal]]);
+  assert.equal(t.clock.pending(300), 1);
+  await t.click('data-action="back"');
+  assert.deepEqual(log.at(-1), ["pause", deal]);
+  assert.equal(t.clock.timers.size, 0);
+});

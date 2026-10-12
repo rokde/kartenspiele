@@ -24,7 +24,7 @@ node --test
   Source: https://github.com/cardmeister/cardmeister.github.io.
   License: the Unlicense (public domain).
   The app uses an unchanged copy in `vendor/cardmeister/` (see `vendor/cardmeister/LICENSE`).
-- Sounds (in `assets/sounds/`, unchanged MP3 files from Pixabay):
+- Sounds (in `assets/sounds/`, MP3 files from Pixabay, with the silence at the start and end cut):
   - `card-play.mp3`: Sound Effect by [freesound_community](https://pixabay.com/de/users/freesound_community-46691455/?utm_source=link-attribution&utm_medium=referral&utm_campaign=music&utm_content=91468) from [Pixabay](https://pixabay.com//?utm_source=link-attribution&utm_medium=referral&utm_campaign=music&utm_content=91468)
   - `shuffle.mp3`: Sound Effect by [freesound_community](https://pixabay.com/de/users/freesound_community-46691455/?utm_source=link-attribution&utm_medium=referral&utm_campaign=music&utm_content=94662) from [Pixabay](https://pixabay.com/sound-effects//?utm_source=link-attribution&utm_medium=referral&utm_campaign=music&utm_content=94662)
   - `win.mp3`: Sound Effect by [freesound_community](https://pixabay.com/de/users/freesound_community-46691455/?utm_source=link-attribution&utm_medium=referral&utm_campaign=music&utm_content=6297) from [Pixabay](https://pixabay.com//?utm_source=link-attribution&utm_medium=referral&utm_campaign=music&utm_content=6297)
