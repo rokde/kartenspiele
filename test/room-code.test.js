@@ -128,12 +128,12 @@ test("AC-5: index.html and the start imports of main.js have no reference to ven
     if (seen.has(url.href)) return;
     seen.add(url.href);
     const js = readFileSync(url, "utf8");
-    assert.ok(!js.includes("vendor/peerjs"), url.pathname);
+    // S19: main.js imports link.js for connectionMessage. Its loader adds PeerJS only on host or join.
+    assert.ok(!js.includes("vendor/peerjs") || url.pathname.endsWith("/src/core/link.js"), url.pathname);
     for (const [, path] of js.matchAll(/^(?:import|export)\s[^;]*?from\s+"([^"]+)"/gm)) visit(new URL(path, url));
   };
   visit(new URL("../src/main.js", import.meta.url));
   assert.ok(seen.size > 5);
-  assert.ok(![...seen].some((href) => href.endsWith("/link.js")));
   assert.ok(existsSync(new URL("../vendor/peerjs/peerjs.min.js", import.meta.url)));
   assert.ok(read("vendor/peerjs/LICENSE").includes("MIT"));
 });

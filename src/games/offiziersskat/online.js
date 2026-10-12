@@ -45,6 +45,8 @@ export function hostSession(link, state, onChange) {
     return true;
   };
   link.onMessage((message) => {
+    // The first view can get lost, so the guest asks for the current view. The host reads no other field.
+    if (message?.type === "ready") return send();
     const move = parseMove(message);
     if (move) apply("computer", move);
   });
@@ -99,5 +101,6 @@ export function guestSession(link, onView) {
     const view = message?.type === "state" ? checkView(message.view) : null;
     if (view) onView(view);
   });
+  link.send({ type: "ready" });
   return { move: (move) => link.send({ type: "move", move }) };
 }

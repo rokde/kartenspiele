@@ -5,7 +5,7 @@ const loadPeerJs = () => new Promise((resolve, reject) => {
   const script = document.createElement("script");
   script.src = new URL("../../vendor/peerjs/peerjs.min.js", import.meta.url).href;
   script.onload = () => resolve(globalThis.Peer);
-  script.onerror = () => reject(new Error("PeerJS did not load"));
+  script.onerror = () => reject(Object.assign(new Error("PeerJS did not load"), { type: "peerjs-load" }));
   document.head.append(script);
 });
 
@@ -58,3 +58,16 @@ export function createLinks(load = loadPeerJs) {
 }
 
 export const { host, join } = createLinks();
+
+const BROKER = "Keine Verbindung zum Vermittlungsserver";
+const MESSAGES = new Map([
+  ["peer-unavailable", "Raum nicht gefunden"],
+  ["network", BROKER],
+  ["server-error", BROKER],
+  ["socket-error", BROKER],
+  ["peerjs-load", BROKER],
+  ["join-timeout", "Keine Antwort vom Raum. Bitte versuche es noch einmal."],
+]);
+
+// A fixed German text for a connection error. The app never shows the PeerJS error text.
+export const connectionMessage = (error) => MESSAGES.get(error?.type) ?? "Keine Verbindung. Bitte versuche es noch einmal.";
