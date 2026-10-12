@@ -1,5 +1,5 @@
 import { listGames, getGame } from "./core/registry.js";
-import { renderMenu, renderGameScreen, renderCredits } from "./core/menu-view.js";
+import { renderMenu, renderGameScreen, renderCredits, renderRules } from "./core/menu-view.js";
 import { save, load } from "./core/storage.js";
 import { createSound } from "./core/sound.js";
 import { createMotion, domView } from "./core/motion.js";
@@ -21,6 +21,8 @@ if (typeof document !== "undefined") {
   // A trick that the motion swept away stays hidden. A counter drops the end of an old run.
   let cleared = false;
   let runs = 0;
+  // True while the rules page shows on top of the running game.
+  let rulesFromGame = false;
   const motion = createMotion({ reduced: matchMedia("(prefers-reduced-motion: reduce)").matches });
   const seed = () => crypto.getRandomValues(new Uint32Array(1))[0];
   // Reading localStorage throws when the browser blocks it. Then the game runs without a save.
@@ -73,10 +75,20 @@ if (typeof document !== "undefined") {
   app.addEventListener("click", (event) => {
     const button = event.target.closest("button");
     if (!button) return;
-    if (button.dataset.action === "back") {
+    if (button.dataset.action === "back" && rulesFromGame) {
+      rulesFromGame = false;
+      showGame();
+    } else if (button.dataset.action === "back") {
       clearTimeout(timer);
       runs++;
       show(menuHtml());
+    } else if (button.dataset.action === "rules") {
+      clearTimeout(timer);
+      runs++;
+      rulesFromGame = true;
+      show(renderRules(game));
+    } else if (button.dataset.rules) {
+      show(renderRules(getGame(button.dataset.rules)));
     } else if (button.dataset.action === "credits") {
       show(renderCredits());
     } else if (button.dataset.gameId) {

@@ -126,7 +126,10 @@ h1 {
 }
 
 .menu-extra {
-  text-align: center;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1rem;
   margin-top: 1.5rem;
 }
 
@@ -187,8 +190,15 @@ h1 {
 
 .screen-bar {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   gap: 1rem;
+}
+
+.rules {
+  max-width: 65ch;
+  margin: 0 auto;
+  line-height: 1.6;
 }
 
 .game-screen h2 {

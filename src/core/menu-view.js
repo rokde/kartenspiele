@@ -2,8 +2,10 @@ export function renderMenu(games) {
   const buttons = games
     .map((game) => `<button type="button" class="game-button" data-game-id="${game.id}">${game.name}</button>`)
     .join("");
+  const rules = games.filter((game) => game.rulesHtml)
+    .map((game) => `<button type="button" class="back-button" data-rules="${game.id}">Regeln</button>`).join("");
   return `<nav class="menu" aria-label="Spiele">${buttons}</nav>` +
-    `<p class="menu-extra"><button type="button" class="back-button" data-action="credits">Credits</button></p>`;
+    `<p class="menu-extra">${rules}<button type="button" class="back-button" data-action="credits">Credits</button></p>`;
 }
 
 const pixabay = (id, user, author, path) => {
@@ -29,8 +31,15 @@ export function renderCredits() {
     `<h3>Töne</h3><ul>${sounds}</ul></section>`;
 }
 
+export function renderRules(game) {
+  return `<div class="screen-bar"><button type="button" class="back-button" data-action="back">Zurück</button></div>` +
+    `<section class="credits rules">${game.rulesHtml}` +
+    `<p>Quelle: ${link("https://de.wikipedia.org/wiki/Offiziersskat", "Offiziersskat bei Wikipedia")}</p></section>`;
+}
+
 export function renderGameScreen(game, state, options) {
   return `<div class="screen-bar"><button type="button" class="back-button" data-action="back">Zurück</button>` +
+    `<button type="button" class="back-button" data-action="rules">Regeln</button>` +
     `<button type="button" class="back-button" data-action="new">Neues Spiel</button></div>` +
     `<section class="game-screen">${game.render(state, options)}</section>`;
 }
