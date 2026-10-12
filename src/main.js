@@ -1,5 +1,6 @@
 import { listGames, getGame } from "./core/registry.js";
-import { renderMenu, renderGameScreen, renderCredits, renderRules } from "./core/menu-view.js";
+import { renderMenu, renderGameScreen, renderCredits, renderRules, renderRoomChoice, renderRoom, renderJoinForm } from "./core/menu-view.js";
+import { makeRoomCode, normalizeRoomCode } from "./core/room-code.js";
 import { save, load, isSaveOf } from "./core/storage.js";
 import { createSound, timeSounds } from "./core/sound.js";
 import { createMotion, domView } from "./core/motion.js";
@@ -18,6 +19,9 @@ export function startApp({
   addEventListener = globalThis.addEventListener,
   reducedMotion = matchMedia("(prefers-reduced-motion: reduce)").matches,
   seed = () => crypto.getRandomValues(new Uint32Array(1))[0],
+  // Loads link.js (and so PeerJS) only when a player opens or joins a room.
+  connect = (role, code, signal) => import("./core/link.js").then((link) => link[role](code, signal)),
+  clipboard = globalThis.navigator?.clipboard,
 } = {}) {
   const app = document.getElementById("app");
   const show = (html) => {
@@ -85,6 +89,29 @@ export function startApp({
     if (run === runs) computerTurn();
   };
 
+  // The open room: its code, an abort for the wait, and the link when it is open.
+  let room = null;
+  const leaveRoom = () => {
+    room?.abort.abort();
+    room?.link?.close();
+    room = null;
+  };
+  const openRoom = async (role, code) => {
+    const current = room = { code, abort: new AbortController() };
+    const host = role === "host";
+    show(renderRoom(code, host ? "Warte auf Mitspieler …" : "Verbinde …", { copy: host }));
+    try {
+      const link = await connect(role, code, current.abort.signal);
+      if (room !== current) return link.close();
+      current.link = link;
+      // Only the text changes, so the focus stays and a screen reader reads the live status.
+      app.querySelector(".room [role=status]").textContent = "Verbunden";
+    } catch {
+      // shortcut: one message for all errors, S19 adds a message for each error.
+      if (room === current) app.querySelector(".room [role=status]").textContent = "Keine Verbindung. Bitte versuche es noch einmal.";
+    }
+  };
+
   // The player leaves the game screen. No old timer or run may change the game later.
   const leave = () => {
     clearTimeout(timer);
@@ -101,6 +128,7 @@ export function startApp({
       showGame();
     } else if (button.dataset.action === "back") {
       leave();
+      leaveRoom();
       show(menuHtml());
     } else if (button.dataset.action === "rules") {
       leave();
@@ -108,6 +136,26 @@ export function startApp({
       show(renderRules(game));
     } else if (button.dataset.rules) {
       show(renderRules(getGame(button.dataset.rules)));
+    } else if (button.dataset.online) {
+      show(renderRoomChoice());
+    } else if (button.dataset.action === "host") {
+      openRoom("host", makeRoomCode());
+    } else if (button.dataset.action === "join") {
+      show(renderJoinForm());
+      app.querySelector("#room-code")?.focus();
+    } else if (button.dataset.action === "join-code") {
+      // The form must not submit and reload the page. Enter in the field also clicks this button.
+      event.preventDefault();
+      const input = app.querySelector("#room-code");
+      const code = normalizeRoomCode(input.value);
+      if (code) openRoom("join", code);
+      else {
+        // The typed text stays, so the player can correct it.
+        app.querySelector(".room__hint").textContent = "Ungültiger Code, z. B. KREUZ-42";
+        input.focus();
+      }
+    } else if (button.dataset.action === "copy") {
+      clipboard?.writeText(room.code).then(() => { button.textContent = "Kopiert ✓"; }, () => {});
     } else if (button.dataset.action === "credits") {
       show(renderCredits());
     } else if (button.dataset.gameId) {

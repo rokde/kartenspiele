@@ -149,7 +149,7 @@ test("AC-6: the menu has a Credits button, and the credits list CardMeister and 
     assert.match(attrs, /rel="noopener noreferrer"/);
   }
   const links = anchors.map(([, attrs, text]) => [attrs.match(/href="([^"]*)"/)[1], text]);
-  assert.deepEqual(links, [["https://cardmeister.github.io/", "CardMeister"], ...SOUND_LINKS]);
+  assert.deepEqual(links, [["https://cardmeister.github.io/", "CardMeister"], ...SOUND_LINKS, ["https://github.com/peers/peerjs", "PeerJS"]]);
   assert.match(html, /Unlicense/);
 });
 

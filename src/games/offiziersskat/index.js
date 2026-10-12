@@ -8,6 +8,7 @@ export { aiMove };
 
 export const id = "offiziersskat";
 export const name = "Offiziersskat";
+export const online = true;
 
 // Keep this text in line with rules.js.
 export const rulesHtml = `<h1>Spielregeln Offiziersskat</h1>

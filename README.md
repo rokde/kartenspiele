@@ -29,3 +29,12 @@ node --test
   - `shuffle.mp3`: Sound Effect by [freesound_community](https://pixabay.com/de/users/freesound_community-46691455/?utm_source=link-attribution&utm_medium=referral&utm_campaign=music&utm_content=94662) from [Pixabay](https://pixabay.com/sound-effects//?utm_source=link-attribution&utm_medium=referral&utm_campaign=music&utm_content=94662)
   - `win.mp3`: Sound Effect by [freesound_community](https://pixabay.com/de/users/freesound_community-46691455/?utm_source=link-attribution&utm_medium=referral&utm_campaign=music&utm_content=6297) from [Pixabay](https://pixabay.com//?utm_source=link-attribution&utm_medium=referral&utm_campaign=music&utm_content=6297)
   - `lose.mp3`: Sound Effect by [Ribhav Agrawal](https://pixabay.com/de/users/ribhavagrawal-39286533/?utm_source=link-attribution&utm_medium=referral&utm_campaign=music&utm_content=230571) from [Pixabay](https://pixabay.com/sound-effects//?utm_source=link-attribution&utm_medium=referral&utm_campaign=music&utm_content=230571)
+- 2-player connection: [PeerJS](https://github.com/peers/peerjs) 1.5.5.
+  License: MIT.
+  The app uses an unchanged copy of the npm browser bundle in `vendor/peerjs/` (see `vendor/peerjs/LICENSE`).
+  The app loads PeerJS only when a player selects "Zu zweit spielen". Single player makes no network calls.
+  In 2-player mode, the public PeerJS broker `0.peerjs.com` sets up the connection.
+  PeerJS also uses the Google STUN server `stun.l.google.com` to find the network address.
+  When a direct connection is not possible, the PeerJS TURN servers (`eu-0.turn.peerjs.com`, `us-0.turn.peerjs.com`) relay the game data.
+  The other player and these servers see the IP address of each browser.
+  Otherwise, the game data goes from browser to browser over WebRTC.
