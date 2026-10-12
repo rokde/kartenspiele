@@ -51,7 +51,7 @@ test("AC-5: render shows 16 card backs and hides the down cards", () => {
 });
 
 test("AC-6: the game screen shows Zurück and 16 open cards, no stub", () => {
-  const html = renderGameScreen(getGame("offiziersskat"));
+  const html = renderGameScreen(getGame("offiziersskat"), getGame("offiziersskat").newGame(5));
   assert.match(html, /<button[^>]*data-action="back"[^>]*>Zurück<\/button>/);
   assert.equal(count(html, 'class="card card--'), 16);
   assert.ok(!html.includes("Kommt bald"));

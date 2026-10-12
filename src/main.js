@@ -12,11 +12,22 @@ if (typeof document !== "undefined") {
   };
   const menuHtml = () => `<h1>${APP_TITLE}</h1>${renderMenu(listGames())}`;
 
+  let game;
+  let state;
+  const showGame = () => show(renderGameScreen(game, state));
+
   app.addEventListener("click", (event) => {
     const button = event.target.closest("button");
     if (!button) return;
     if (button.dataset.action === "back") show(menuHtml());
-    else if (button.dataset.gameId) show(renderGameScreen(getGame(button.dataset.gameId)));
+    else if (button.dataset.gameId) {
+      game = getGame(button.dataset.gameId);
+      state = game.newGame(crypto.getRandomValues(new Uint32Array(1))[0]);
+      showGame();
+    } else if (button.dataset.announce) {
+      state = game.applyMove(state, { type: "announce", game: button.dataset.announce });
+      showGame();
+    }
   });
 
   document.title = APP_TITLE;

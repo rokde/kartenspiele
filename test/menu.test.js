@@ -18,7 +18,7 @@ test("renderMenu shows one button for each game", () => {
 });
 
 test("renderGameScreen shows the game and a Zurück button", () => {
-  const html = renderGameScreen(getGame("offiziersskat"));
+  const html = renderGameScreen(getGame("offiziersskat"), getGame("offiziersskat").newGame(5));
   assert.ok(html.includes("Offiziersskat"));
   assert.match(html, /<button[^>]*data-action="back"[^>]*>Zurück<\/button>/);
 });
