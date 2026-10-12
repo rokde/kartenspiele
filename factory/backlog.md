@@ -16,7 +16,7 @@ Example: `- [ ] PROJ-1 a hello CLI command that greets a name passed as an argum
 - [x] S5 Game announcement: Vorhand announces suit or Grand. The human selects from buttons, the computer selects the suit with the most strength. The table shows the trump. Needs S4. → 005-announcement
 - [x] S6 Trick rules: pure functions for trump order, legal moves (follow suit, trump as a suit), trick winner, and the reveal of the card below. Unit tests cover each rule. Needs S4. → 006-trick-rules
 - [x] S7 Play a full game: the human clicks legal cards, the computer plays a random legal card, tricks resolve, and the game ends after 16 tricks. Needs S5, S6. → 007-full-game
-- [ ] S8 Score and next game: the app counts the card points, shows win, loss, or draw, keeps a score list, and starts the next game with the other dealer. Needs S7.
+- [x] S8 Score and next game: the app counts the card points, shows win, loss, or draw, keeps a score list, and starts the next game with the other dealer. Needs S7. → 008-score-next-game
 - [ ] S9 Save and resume: the app saves the current game and the score list to `localStorage` after each move, and resumes them after a reload. A "new game" button clears the current game. Needs S8.
 - [ ] S10 Better computer: the computer uses rules of thumb (take a trick with points cheaply, give low cards when it loses, keep trumps, take care which card below it reveals). Tests check some fixed positions. Needs S7.
 - [ ] S11 Rules page: a short German rules text is available from the game screen, so that the human can check the rule set. Needs S3.
