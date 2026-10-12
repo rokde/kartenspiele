@@ -132,6 +132,53 @@ h1 {
   font-style: italic;
 }
 
+.table {
+  max-width: 44rem;
+  margin: 0 auto;
+}
+
+.row__label {
+  margin: 1rem 0 0.5rem;
+  color: var(--eichel);
+}
+
+.row {
+  display: grid;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  gap: clamp(0.25rem, 1vw, 0.75rem);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.stack .card {
+  position: relative;
+  z-index: 1;
+  padding: clamp(0.15rem, 0.8vw, 0.4rem);
+  border-width: clamp(1px, 0.4vw, 2px);
+  border-radius: clamp(0.4rem, 1.5vw, 0.75rem);
+}
+
+.stack .card__rank {
+  font-size: clamp(0.75rem, 3vw, 1.25rem);
+}
+
+.stack .card__symbol {
+  font-size: clamp(0.9rem, 4.5vw, 2rem);
+}
+
+/* The back sits below the open card and peeks out at the bottom. */
+.card-back {
+  aspect-ratio: 2 / 3;
+  margin-top: -120%;
+  border: clamp(1px, 0.4vw, 2px) solid var(--rot);
+  border-radius: clamp(0.4rem, 1.5vw, 0.75rem);
+  background:
+    repeating-linear-gradient(45deg, transparent 0 4px, rgb(255 250 242 / 0.35) 4px 8px),
+    var(--schellen);
+  box-shadow: 0 2px 4px rgb(59 36 20 / 0.2);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .card,
   .game-button,
