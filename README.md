@@ -33,6 +33,8 @@ node --test
   License: MIT.
   The app uses an unchanged copy of the npm browser bundle in `vendor/peerjs/` (see `vendor/peerjs/LICENSE`).
   The app loads PeerJS only when a player selects "Zu zweit spielen". Single player makes no network calls.
-  In 2-player mode, the public PeerJS broker `0.peerjs.com` only sets up the connection.
-  The broker and the other player see the IP address of each browser.
-  The game data then goes directly from browser to browser over WebRTC.
+  In 2-player mode, the public PeerJS broker `0.peerjs.com` sets up the connection.
+  PeerJS also uses the Google STUN server `stun.l.google.com` to find the network address.
+  When a direct connection is not possible, the PeerJS TURN servers (`eu-0.turn.peerjs.com`, `us-0.turn.peerjs.com`) relay the game data.
+  The other player and these servers see the IP address of each browser.
+  Otherwise, the game data goes from browser to browser over WebRTC.

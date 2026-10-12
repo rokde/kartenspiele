@@ -154,8 +154,19 @@ function setup() {
   });
   const app = fake();
   const mute = fake();
-  const input = { value: "", focus() {} };
-  app.querySelector = (selector) => (selector === "#room-code" ? input : null);
+  // Each new screen makes new elements. The status and the hint get their text from the HTML.
+  const parts = {};
+  let html = "";
+  Object.defineProperty(app, "innerHTML", {
+    get: () => html,
+    set(value) {
+      html = value;
+      parts["#room-code"] = { value: "", focus() {} };
+      parts[".room [role=status]"] = { textContent: value.match(/role="status">([^<]*)</)?.[1] };
+      parts[".room__hint"] = { textContent: value.match(/class="room__hint"[^>]*>([^<]*)</)?.[1] };
+    },
+  });
+  app.querySelector = (selector) => parts[selector] ?? null;
   const document = { title: "", getElementById: (id) => ({ app, mute })[id], addEventListener() {} };
   const calls = [];
   const connect = (role, code, signal) => new Promise((resolve) => {
@@ -179,7 +190,7 @@ function setup() {
     for (const fn of app.listeners.click) fn({ target: { closest: () => ({ dataset }) }, preventDefault() {} });
     await settle();
   };
-  return { app, input, calls, click };
+  return { app, parts, calls, click, status: () => parts[".room [role=status]"].textContent };
 }
 
 test("AC-6: the menu has Zu zweit spielen, and Raum öffnen shows a code, a copy button, and Verbunden", async () => {
@@ -192,11 +203,13 @@ test("AC-6: the menu has Zu zweit spielen, and Raum öffnen shows a code, a copy
   const code = t.app.innerHTML.match(/class="room__code">([^<]*)</)[1];
   assert.match(code, FORMAT);
   assert.match(t.app.innerHTML, /<button type="button"[^>]*data-action="copy"[^>]*>Code kopieren<\/button>/);
-  assert.match(t.app.innerHTML, /role="status">Warte auf Mitspieler …</);
+  assert.equal(t.status(), "Warte auf Mitspieler …");
   assert.deepEqual([t.calls[0].role, t.calls[0].code], ["host", code]);
+  const screen = t.app.innerHTML;
   t.calls[0].open();
   await settle();
-  assert.match(t.app.innerHTML, /role="status">Verbunden</);
+  assert.equal(t.status(), "Verbunden");
+  assert.equal(t.app.innerHTML, screen, "the screen is not rendered again, so the focus stays");
 });
 
 test("AC-7: Raum beitreten normalizes the code, rejects an invalid code, and Zurück closes the link", async () => {
@@ -204,17 +217,21 @@ test("AC-7: Raum beitreten normalizes the code, rejects an invalid code, and Zur
   await t.click('data-online="offiziersskat"');
   await t.click('data-action="join"');
   assert.match(t.app.innerHTML, /<input id="room-code"[^>]*autocapitalize="characters"[^>]*autocomplete="off"/);
-  t.input.value = "hund";
+  const input = t.parts["#room-code"];
+  input.value = "hund";
   await t.click('data-action="join-code"');
-  assert.match(t.app.innerHTML, /Ungültiger Code, z\. B\. KREUZ-42/);
+  assert.equal(t.parts[".room__hint"].textContent, "Ungültiger Code, z. B. KREUZ-42");
+  assert.equal(t.parts["#room-code"], input, "the form stays, so the typed text stays");
+  assert.equal(input.value, "hund");
   assert.ok(!t.app.innerHTML.includes("hund"));
   assert.equal(t.calls.length, 0);
-  t.input.value = "kreuz 42";
+  input.value = "kreuz 42";
   await t.click('data-action="join-code"');
   assert.deepEqual([t.calls[0].role, t.calls[0].code], ["join", "KREUZ-42"]);
+  assert.equal(t.status(), "Verbinde …");
   t.calls[0].open();
   await settle();
-  assert.match(t.app.innerHTML, /role="status">Verbunden</);
+  assert.equal(t.status(), "Verbunden");
   await t.click('data-action="back"');
   assert.equal(t.calls[0].link.closed, 1);
   assert.equal(t.calls[0].signal.aborted, true);
@@ -233,9 +250,9 @@ test("AC-7: Zurück while the host waits aborts the wait, and a late link closes
   assert.match(t.app.innerHTML, /<h1>Karten<\/h1>/);
 });
 
-test("AC-8: the credits and the README name PeerJS, MIT, and 0.peerjs.com", () => {
+test("AC-8: the credits and the README name PeerJS, MIT, 0.peerjs.com, and the STUN and TURN servers", () => {
   const html = renderCredits();
-  for (const text of ["PeerJS", "MIT", "0.peerjs.com"]) assert.ok(html.includes(text), text);
+  for (const text of ["PeerJS", "MIT", "0.peerjs.com", "stun.l.google.com", "TURN"]) assert.ok(html.includes(text), text);
   const credits = read("README.md").split("## Credits")[1];
-  for (const text of ["PeerJS", "0.peerjs.com"]) assert.ok(credits.includes(text), text);
+  for (const text of ["PeerJS", "0.peerjs.com", "stun.l.google.com", "turn.peerjs.com"]) assert.ok(credits.includes(text), text);
 });

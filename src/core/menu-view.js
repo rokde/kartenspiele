@@ -31,8 +31,10 @@ export function renderCredits() {
     `<h3>Karten</h3><ul><li>${link("https://cardmeister.github.io/", "CardMeister")} (Unlicense, gemeinfrei)</li></ul>` +
     `<h3>Töne</h3><ul>${sounds}</ul>` +
     `<h3>Zu zweit spielen</h3><ul><li>${link("https://github.com/peers/peerjs", "PeerJS")} (MIT-Lizenz). ` +
-    `Im Spiel zu zweit baut der öffentliche Vermittlungsserver 0.peerjs.com nur die Verbindung auf. ` +
-    `Dabei sieht er die IP-Adresse beider Browser. Die Spieldaten gehen danach direkt von Browser zu Browser.</li></ul></section>`;
+    `Im Spiel zu zweit baut der öffentliche Vermittlungsserver 0.peerjs.com die Verbindung auf. ` +
+    `PeerJS fragt dazu auch den STUN-Server von Google (stun.l.google.com). ` +
+    `Wenn keine direkte Verbindung möglich ist, leiten die TURN-Server von PeerJS die Spieldaten weiter. ` +
+    `Der Mitspieler und diese Server sehen die IP-Adresse beider Browser.</li></ul></section>`;
 }
 
 const backBar = `<div class="screen-bar"><button type="button" class="back-button" data-action="back">Zurück</button></div>`;
@@ -52,12 +54,12 @@ export function renderRoom(code, status, { copy = false } = {}) {
     `<p class="status" role="status">${status}</p></section>`;
 }
 
-export function renderJoinForm(hint = "") {
+export function renderJoinForm() {
   return backBar + `<section class="room"><h2>Raum beitreten</h2>` +
     `<form class="room__form"><label for="room-code">Code</label>` +
     `<input id="room-code" class="room__input" type="text" autocapitalize="characters" autocomplete="off" spellcheck="false" placeholder="KREUZ-42">` +
     `<button type="submit" class="game-button" data-action="join-code">Beitreten</button></form>` +
-    `<p class="room__hint" role="alert">${hint}</p></section>`;
+    `<p class="room__hint" role="alert"></p></section>`;
 }
 
 export function renderRules(game) {

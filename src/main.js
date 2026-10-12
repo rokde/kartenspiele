@@ -104,10 +104,11 @@ export function startApp({
       const link = await connect(role, code, current.abort.signal);
       if (room !== current) return link.close();
       current.link = link;
-      show(renderRoom(code, "Verbunden", { copy: host }));
+      // Only the text changes, so the focus stays and a screen reader reads the live status.
+      app.querySelector(".room [role=status]").textContent = "Verbunden";
     } catch {
       // shortcut: one message for all errors, S19 adds a message for each error.
-      if (room === current) show(renderRoom(code, "Keine Verbindung. Bitte versuche es noch einmal.", { copy: host }));
+      if (room === current) app.querySelector(".room [role=status]").textContent = "Keine Verbindung. Bitte versuche es noch einmal.";
     }
   };
 
@@ -145,11 +146,13 @@ export function startApp({
     } else if (button.dataset.action === "join-code") {
       // The form must not submit and reload the page. Enter in the field also clicks this button.
       event.preventDefault();
-      const code = normalizeRoomCode(app.querySelector("#room-code")?.value);
+      const input = app.querySelector("#room-code");
+      const code = normalizeRoomCode(input.value);
       if (code) openRoom("join", code);
       else {
-        show(renderJoinForm("Ungültiger Code, z. B. KREUZ-42"));
-        app.querySelector("#room-code")?.focus();
+        // The typed text stays, so the player can correct it.
+        app.querySelector(".room__hint").textContent = "Ungültiger Code, z. B. KREUZ-42";
+        input.focus();
       }
     } else if (button.dataset.action === "copy") {
       clipboard?.writeText(room.code).then(() => { button.textContent = "Kopiert ✓"; }, () => {});
