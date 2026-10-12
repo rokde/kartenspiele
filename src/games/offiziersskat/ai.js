@@ -1,0 +1,18 @@
+import { SUITS } from "../../core/cards.js";
+import { CARD_POINTS } from "./rules.js";
+
+// Strength of a suit: first the card count, then the card points. The Unter are trump in every game, so skip them.
+export function aiMove(state) {
+  const cards = state.players.computer.stacks.map((stack) => stack.up).filter((card) => card.rank !== "U");
+  const strength = (suit) => {
+    const own = cards.filter((card) => card.suit === suit);
+    return [own.length, own.reduce((sum, card) => sum + CARD_POINTS[card.rank], 0)];
+  };
+  let best = SUITS[0];
+  for (const suit of SUITS.slice(1)) {
+    const [count, points] = strength(suit);
+    const [bestCount, bestPoints] = strength(best);
+    if (count > bestCount || (count === bestCount && points > bestPoints)) best = suit;
+  }
+  return { type: "announce", game: best };
+}

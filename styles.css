@@ -179,10 +179,79 @@ h1 {
   box-shadow: 0 2px 4px rgb(59 36 20 / 0.2);
 }
 
+.announce {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  text-align: center;
+}
+
+.announce__vorhand {
+  margin: 0;
+  font-weight: 700;
+}
+
+.announce__buttons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.announce-button {
+  min-height: 2.75rem;
+  padding: 0.5rem 1rem;
+  font: inherit;
+  font-weight: 700;
+  color: var(--text);
+  background: var(--card-bg);
+  border: 2px solid currentColor;
+  border-radius: 999px;
+  cursor: pointer;
+  box-shadow: 0 3px 0 currentColor;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.announce-button--eichel,
+.trump-badge--eichel { color: var(--eichel); }
+.announce-button--gruen,
+.trump-badge--gruen { color: var(--gruen); }
+.announce-button--rot,
+.trump-badge--rot { color: var(--rot); }
+.announce-button--schellen,
+.trump-badge--schellen { color: var(--schellen); }
+
+.announce-button:hover {
+  transform: translateY(-2px) rotate(-1deg);
+}
+
+.announce-button:active {
+  transform: translateY(2px);
+  box-shadow: none;
+}
+
+.announce-button:focus-visible {
+  outline: 3px solid var(--schellen);
+  outline-offset: 3px;
+}
+
+.trump-badge {
+  margin: 0;
+  padding: 0.4rem 1.1rem;
+  font-size: 1.15rem;
+  font-weight: 700;
+  background: var(--card-bg);
+  border: 2px solid currentColor;
+  border-radius: 999px;
+  box-shadow: 0 2px 4px rgb(59 36 20 / 0.2);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .card,
   .game-button,
-  .back-button {
+  .back-button,
+  .announce-button {
     transition: none;
   }
 
@@ -191,7 +260,9 @@ h1 {
   .game-button:hover,
   .game-button:active,
   .back-button:hover,
-  .back-button:active {
+  .back-button:active,
+  .announce-button:hover,
+  .announce-button:active {
     transform: none;
   }
 }
