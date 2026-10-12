@@ -99,13 +99,14 @@ function endings() {
   return found;
 }
 
-test("AC-4: soundEvents gives deal, play, win, lose, and nothing for an announcement", () => {
+test("AC-4: soundEvents gives deal, play, win, lose, and the rest deal for an announcement", () => {
   const dealt = rules.newGame(3, "computer");
   assert.equal(dealt.vorhand, "human");
   assert.deepEqual(game.soundEvents(null, dealt), ["deal"]);
   assert.deepEqual(game.soundEvents(null, game.newGame(4, "human")), ["deal"]);
   const announced = rules.applyMove(dealt, { type: "announce", game: "herz" });
-  assert.deepEqual(game.soundEvents(dealt, announced), []);
+  assert.deepEqual(game.soundEvents(dealt, announced), ["deal"]);
+  assert.deepEqual(game.soundEvents(dealt, dealt), []);
   const humanCard = rules.applyMove(announced, aiMove(announced));
   assert.equal(announced.turn, "human");
   assert.deepEqual(game.soundEvents(announced, humanCard), ["play"]);

@@ -61,11 +61,11 @@ function setup({ reduced = false, unlocked = true, muted = false } = {}) {
     lift: () => ["ghost1", "ghost2"],
     drop() {},
   };
-  const run = (prev, next, sounds = game.soundEvents(prev, next)) => {
+  const run = (prev, next) => {
     sound.stop();
     const motions = [];
     motion.run(game.motionEvents(prev, next), view, ({ type }, delay, duration) => motions.push({ type, delay, duration }));
-    for (const [event, timing] of timeSounds(sounds, motions)) sound.play(event, timing);
+    for (const [event, timing] of timeSounds(game.soundEvents(prev, next), motions)) sound.play(event, timing);
   };
   return { clock, log, created, flies, sound, motion, run };
 }
@@ -107,7 +107,6 @@ test("AC-2: after a waiting trick, the card sound starts after the sweep delay",
 });
 
 test("AC-3: one deal sound starts with the first deal fly and stops when the last one lands", () => {
-  // The announcement plays no sound in the game (product.md). The REST_DEAL case gives the deal sound to check the time.
   const cases = [
     [null, rules.newGame(3, "computer"), rules.FIRST_DEAL.length, 920],
     [rules.newGame(3, "computer"), game.applyMove(rules.newGame(3, "computer"), { type: "announce", game: "herz" }), rules.REST_DEAL.length, 1420],
@@ -115,7 +114,7 @@ test("AC-3: one deal sound starts with the first deal fly and stops when the las
   ];
   for (const [prev, next, steps, expected] of cases) {
     const t = setup();
-    t.run(prev, next, ["deal"]);
+    t.run(prev, next);
     t.clock.tick(5000);
     assert.equal(lastDealEnd(steps), expected);
     assert.equal(Math.max(...t.flies.map((f) => f.delay + f.duration)), expected);
@@ -193,4 +192,11 @@ test("AC-6: a new run, stop(), and mute pause the playing sounds and cancel the 
   t.clock.tick(5000);
   assert.deepEqual(t.log, [["play", "deal", 100], ["pause", "deal", 100]]);
   assert.equal(t.clock.timers.size, 0);
+});
+
+test("preload loads each file before unlock and plays nothing", () => {
+  const t = setup({ unlocked: false });
+  t.sound.preload();
+  assert.deepEqual(t.created, Object.values(SOUNDS));
+  assert.deepEqual(t.log, []);
 });

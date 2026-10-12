@@ -31,6 +31,7 @@ export function createSound(storage, {
 } = {}) {
   let muted = load(storage, "sound") === true;
   let unlocked = false;
+  let preloaded = [];
   const timers = new Set();
   const playing = new Set();
   const later = (fn, ms) => {
@@ -52,6 +53,10 @@ export function createSound(storage, {
       muted = value;
       save(storage, "sound", muted);
       if (muted) stop();
+    },
+    // Loading is allowed before a user gesture. The kept elements fill the browser cache for the first play.
+    preload() {
+      preloaded = Object.values(SOUNDS).map(createAudio);
     },
     unlock() {
       unlocked = true;

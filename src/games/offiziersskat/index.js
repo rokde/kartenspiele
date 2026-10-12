@@ -73,6 +73,8 @@ const playedCount = (state) => state.tricks.length * 2 + state.trick.length;
 export function soundEvents(prev, next) {
   const fresh = !prev || rules.isOver(prev);
   if (fresh) return playedCount(next) === 0 ? ["deal"] : [];
+  // The announcement deals the rest of the cards.
+  if (prev.trump === null) return next.trump === null ? [] : ["deal"];
   const events = Array(Math.max(0, playedCount(next) - playedCount(prev))).fill("play");
   if (rules.isOver(next)) events.push(rules.winner(next) === "human" ? "win" : "lose");
   return events;

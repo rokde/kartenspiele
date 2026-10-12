@@ -38,6 +38,7 @@ export function startApp({
   const motion = createMotion({ reduced: reducedMotion, setTimeout, clearTimeout });
   const saved = (g) => g.restore(load(store, g.id));
   const sound = createSound(store, { setTimeout, clearTimeout });
+  sound.preload();
   for (const type of ["pointerdown", "keydown", "click"]) document.addEventListener(type, sound.unlock, { capture: true });
   const mute = document.getElementById("mute");
   const showMute = () => {

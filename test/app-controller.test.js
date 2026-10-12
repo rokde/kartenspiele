@@ -7,6 +7,8 @@ import * as game from "../src/games/offiziersskat/index.js";
 import * as rules from "../src/games/offiziersskat/rules.js";
 
 const KEY = "karten:offiziersskat";
+// startApp preloads the sounds. A test can replace this fake.
+globalThis.Audio ??= class { play() {} pause() {} };
 const settle = () => new Promise((resolve) => setImmediate(resolve));
 
 // Fake timers with a fake clock: tick(ms) calls each timer that is due, in time order.
