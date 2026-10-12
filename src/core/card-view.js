@@ -25,7 +25,3 @@ export function renderCard(card) {
 export function renderCardBack() {
   return `<div class="card-back" role="img" aria-label="Verdeckte Karte"></div>`;
 }
-
-export function renderDeck(cards) {
-  return `<div class="deck">${cards.map(renderCard).join("")}</div>`;
-}

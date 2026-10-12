@@ -31,12 +31,6 @@ h1 {
   color: var(--red);
 }
 
-.deck {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(4.5rem, 1fr));
-  gap: 0.75rem;
-}
-
 .card {
   aspect-ratio: 240 / 334;
   display: flex;

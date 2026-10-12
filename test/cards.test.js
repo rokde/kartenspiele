@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { SUITS, RANKS, SUIT_SYMBOLS, createDeck, shuffle, cardName } from "../src/core/cards.js";
-import { renderCard, renderDeck } from "../src/core/card-view.js";
+import { renderCard } from "../src/core/card-view.js";
 
 const key = (c) => `${c.suit}:${c.rank}`;
 
@@ -50,11 +50,6 @@ test("AC-5: SUIT_SYMBOLS and renderCard", () => {
     assert.ok(html.includes(`card--${card.suit}`));
     assert.ok(html.includes(`aria-label="${cardName(card)}"`));
   }
-});
-
-test("AC-6: renderDeck renders 32 card elements", () => {
-  const html = renderDeck(createDeck());
-  assert.equal(html.match(/class="card card--/g).length, 32);
 });
 
 test("AC-7: index.html links styles.css", () => {
