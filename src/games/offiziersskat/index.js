@@ -100,6 +100,7 @@ export function motionEvents(prev, next) {
 }
 
 const PLAYER_NAMES = { human: "Du", computer: "Computer" };
+const ONLINE_NAMES = { human: "Du", computer: "Mitspieler" };
 
 function renderStack(stack, i, legal) {
   const up = !stack.up ? "" : legal.includes(i)
@@ -109,36 +110,36 @@ function renderStack(stack, i, legal) {
 }
 
 // One back for each won trick. The slot has a fixed size, so the pile does not move the layout.
-function renderPile(state, player) {
+function renderPile(state, player, names) {
   const won = state.tricks.filter((t) => t.winner === player).length;
   const backs = Array.from({ length: won }, (_, i) => `<span class="card-back" style="--i: ${i}"></span>`).join("");
-  return `<div class="pile" data-player="${player}" role="img" aria-label="${PLAYER_NAMES[player]}: ${won} ${won === 1 ? "Stich" : "Stiche"}">` +
+  return `<div class="pile" data-player="${player}" role="img" aria-label="${names[player]}: ${won} ${won === 1 ? "Stich" : "Stiche"}">` +
     `<span class="pile__slot">${backs}</span><span class="pile__count">${won}</span></div>`;
 }
 
-function renderRow(state, player, legal = []) {
+function renderRow(state, player, names, legal = []) {
   const stacks = state.players[player].stacks.map((stack, i) => renderStack(stack, i, legal)).join("");
-  return `<div class="row__head"><h3 class="row__label">${PLAYER_NAMES[player]}</h3>${renderPile(state, player)}</div>` +
+  return `<div class="row__head"><h3 class="row__label">${names[player]}</h3>${renderPile(state, player, names)}</div>` +
     `<ul class="row${legal.length ? " row--playing" : ""}" data-player="${player}">${stacks}</ul>`;
 }
 
-function renderStatus(state) {
+function renderStatus(state, names) {
   if (rules.isOver(state)) return "Spiel vorbei";
-  return state.turn === "human" ? "Du bist dran" : "Computer ist dran";
+  return state.turn === "human" ? "Du bist dran" : `${names.computer} ist dran`;
 }
 
 // An empty open trick shows the last trick until it is cleared. The deal stack sits in the middle.
-function renderTrick(state, trickCleared) {
+function renderTrick(state, trickCleared, names) {
   const last = !trickCleared && state.trick.length === 0 && state.tricks.at(-1);
   const cards = (last ? last.cards : state.trick).map(({ player, card }) =>
-    `<li class="trick__card"><span class="trick__player">${PLAYER_NAMES[player]}</span>${renderCard(card)}</li>`).join("");
-  const caption = last ? `<p class="trick__winner">Stich für ${last.winner === "human" ? "dich" : "Computer"}</p>` : "";
+    `<li class="trick__card"><span class="trick__player">${names[player]}</span>${renderCard(card)}</li>`).join("");
+  const caption = last ? `<p class="trick__winner">Stich für ${last.winner === "human" ? "dich" : names.computer}</p>` : "";
   const deck = `<div class="deal-stack" aria-hidden="true">${state.stock.length ? '<span class="card-back"></span>'.repeat(3) : ""}</div>`;
   return `<div class="trick">${deck}<ul class="trick__cards" aria-label="Stich">${cards}</ul>${caption}</div>`;
 }
 
-function renderAnnouncement(state) {
-  const vorhand = `<p class="announce__vorhand">Vorhand: ${state.vorhand === "human" ? "Du" : "Computer"}</p>`;
+function renderAnnouncement(state, names) {
+  const vorhand = `<p class="announce__vorhand">Vorhand: ${names[state.vorhand]}</p>`;
   if (state.trump) {
     return vorhand + `<p class="trump-badge trump-badge--${state.trump}" role="status" tabindex="-1">${symbol(state.trump)}Trumpf: ${GAME_NAMES[state.trump]}</p>`;
   }
@@ -152,27 +153,33 @@ function renderAnnouncement(state) {
 const OUTCOMES = { win: "Gewonnen!", loss: "Verloren" };
 
 // The button names the result text, so a screen reader reads it with the focus. Newest game first.
-function renderResult(state) {
+// Only the host starts the next online game.
+function renderResult(state, names, online) {
   const { human, computer } = rules.points(state);
   const outcome = rules.winner(state) === "human" ? "win" : "loss";
-  const rows = state.scores.map((s) => `<li>Du ${s.human} : ${s.computer} Computer</li>`).reverse().join("");
+  const rows = state.scores.map((s) => `<li>Du ${s.human} : ${s.computer} ${names.computer}</li>`).reverse().join("");
+  const next = online === "guest"
+    ? `<p class="result__wait" role="status">Warte auf den Gastgeber …</p>`
+    : `<button type="button" class="game-button" data-action="next" aria-describedby="result-outcome result-points">Nächstes Spiel</button>`;
   return `<section class="result" aria-label="Ergebnis">` +
     `<p class="result__outcome result__outcome--${outcome}" id="result-outcome">${OUTCOMES[outcome]}</p>` +
-    `<p class="result__points" id="result-points">Du ${human} Punkte, Computer ${computer} Punkte</p>` +
-    `<p class="result__announcer">Ansager: ${PLAYER_NAMES[state.vorhand]}</p>` +
-    `<button type="button" class="game-button" data-action="next" aria-describedby="result-outcome result-points">Nächstes Spiel</button>` +
+    `<p class="result__points" id="result-points">Du ${human} Punkte, ${names.computer} ${computer} Punkte</p>` +
+    `<p class="result__announcer">Ansager: ${names[state.vorhand]}</p>` + next +
     `<h3 class="result__title">Spielliste</h3><ol class="result__scores" reversed>${rows}</ol>` +
     `</section>`;
 }
 
-export function render(state, { trickCleared = false } = {}) {
+// `online` is "host" or "guest" in a game with 2 browsers. The guest state is the view from online.js.
+export function render(state, { trickCleared = false, online = null } = {}) {
+  const names = online ? ONLINE_NAMES : PLAYER_NAMES;
   const playing = state.trump !== null;
-  const legal = playing && state.turn === "human" && !rules.isOver(state) ? rules.legalStacksFor(state) : [];
+  const turn = playing && state.turn === "human" && !rules.isOver(state);
+  const legal = !turn ? [] : online === "guest" ? state.legal : rules.legalStacksFor(state);
   return `<h2>${name}</h2><div class="table">` +
-    `<div class="announce">${renderAnnouncement(state)}</div>` +
-    renderRow(state, "computer") +
-    (playing ? `<p class="status" role="status" tabindex="-1">${renderStatus(state)}</p>` : "") +
-    renderTrick(state, trickCleared) +
-    renderRow(state, "human", legal) +
-    `</div>` + (rules.isOver(state) ? renderResult(state) : "");
+    `<div class="announce">${renderAnnouncement(state, names)}</div>` +
+    renderRow(state, "computer", names) +
+    (playing ? `<p class="status" role="status" tabindex="-1">${renderStatus(state, names)}</p>` : "") +
+    renderTrick(state, trickCleared, names) +
+    renderRow(state, "human", names, legal) +
+    `</div>` + (rules.isOver(state) ? renderResult(state, names, online) : "");
 }

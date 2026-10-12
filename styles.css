@@ -607,6 +607,12 @@ h1 {
   font-weight: 700;
 }
 
+.result__wait {
+  margin: 0;
+  font-style: italic;
+  color: var(--brown);
+}
+
 .result__title {
   margin: 1.25rem 0 0.25rem;
   color: var(--brown);

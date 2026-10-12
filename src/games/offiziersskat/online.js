@@ -1,5 +1,5 @@
 import { SUITS, RANKS } from "../../core/cards.js";
-import { GAMES, applyMove, isOver, legalStacksFor } from "./rules.js";
+import { GAMES, applyMove, isOver, legalStacksFor, nextGame } from "./rules.js";
 
 const ROLES = ["human", "computer"];
 const swap = (player) => (player === "human" ? "computer" : "human");
@@ -49,7 +49,15 @@ export function hostSession(link, state, onChange) {
     if (move) apply("computer", move);
   });
   send();
-  return { move: (move) => apply("human", move) };
+  return {
+    move: (move) => apply("human", move),
+    // Only the host calls this. No guest message starts a new game.
+    next(seed) {
+      state = nextGame(state, seed);
+      onChange(state);
+      send();
+    },
+  };
 }
 
 // Host views reach the HTML. Returns a clean copy of a valid view, or null.

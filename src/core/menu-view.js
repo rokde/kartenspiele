@@ -68,9 +68,10 @@ export function renderRules(game) {
     `<p>Quelle: ${link("https://de.wikipedia.org/wiki/Offiziersskat", "Offiziersskat bei Wikipedia")}</p></section>`;
 }
 
-export function renderGameScreen(game, state, options) {
+// An online game has no restart and no rules page, so its bar has only "Zurück".
+export function renderGameScreen(game, state, options = {}) {
   return `<div class="screen-bar"><button type="button" class="back-button" data-action="back">Zurück</button>` +
-    `<button type="button" class="back-button" data-action="rules">Regeln</button>` +
-    `<button type="button" class="back-button" data-action="new">Neues Spiel</button></div>` +
+    (options.online ? "" : `<button type="button" class="back-button" data-action="rules">Regeln</button>` +
+    `<button type="button" class="back-button" data-action="new">Neues Spiel</button>`) + `</div>` +
     `<section class="game-screen">${game.render(state, options)}</section>`;
 }
