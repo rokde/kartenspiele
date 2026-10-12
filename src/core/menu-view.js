@@ -7,5 +7,5 @@ export function renderMenu(games) {
 
 export function renderGameScreen(game) {
   return `<button type="button" class="back-button" data-action="back">Zurück</button>` +
-    `<section class="game-screen">${game.render()}</section>`;
+    `<section class="game-screen">${game.render(game.newGame(crypto.getRandomValues(new Uint32Array(1))[0]))}</section>`;
 }
