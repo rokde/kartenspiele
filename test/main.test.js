@@ -27,7 +27,7 @@ test("README.md gives the start and test commands", () => {
   assert.ok(readme.includes("node --test"));
 });
 
-test("python3 -m http.server serves / and /src/main.js", { timeout: 10000 }, async (t) => {
+test("python3 -m http.server serves the page, styles, and modules", { timeout: 10000 }, async (t) => {
   // Port 0 lets the OS select a free port; the test reads it from the server log.
   const server = spawn("python3", ["-u", "-m", "http.server", "0", "--bind", "127.0.0.1"], {
     cwd: root,
@@ -40,7 +40,7 @@ test("python3 -m http.server serves / and /src/main.js", { timeout: 10000 }, asy
     log += chunk;
   }
   const port = log.match(/port (\d+)/)[1];
-  for (const path of ["/", "/src/main.js"]) {
+  for (const path of ["/", "/src/main.js", "/styles.css", "/src/core/cards.js", "/src/core/card-view.js"]) {
     const res = await fetch(`http://127.0.0.1:${port}${path}`);
     assert.equal(res.status, 200, path);
   }
