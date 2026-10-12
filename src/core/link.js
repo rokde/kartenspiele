@@ -1,0 +1,60 @@
+import { peerId } from "./room-code.js";
+
+// Loads the vendored PeerJS bundle. It sets the global `Peer`.
+const loadPeerJs = () => new Promise((resolve, reject) => {
+  const script = document.createElement("script");
+  script.src = new URL("../../vendor/peerjs/peerjs.min.js", import.meta.url).href;
+  script.onload = () => resolve(globalThis.Peer);
+  script.onerror = () => reject(new Error("PeerJS did not load"));
+  document.head.append(script);
+});
+
+const wrap = (peer, conn) => ({
+  send: (data) => conn.send(data),
+  onMessage: (fn) => conn.on("data", fn),
+  onClose: (fn) => conn.on("close", fn),
+  close: () => {
+    conn.close();
+    peer.destroy();
+  },
+});
+
+// `load` gives the Peer class. It runs once, on the first host or join call.
+export function createLinks(load = loadPeerJs) {
+  let loading;
+  const Peer = () => (loading ??= load().catch((error) => {
+    loading = null;
+    throw error;
+  }));
+
+  // The Promise resolves with the first open data channel. An abort destroys the peer.
+  const connect = async (id, signal, start) => {
+    const PeerClass = await Peer();
+    signal?.throwIfAborted();
+    return new Promise((resolve, reject) => {
+      const peer = id ? new PeerClass(id) : new PeerClass();
+      let settled = false;
+      const fail = (error) => {
+        if (settled) return;
+        settled = true;
+        peer.destroy();
+        reject(error);
+      };
+      signal?.addEventListener("abort", () => fail(signal.reason));
+      peer.on("error", fail);
+      start(peer, (conn) => conn.on("open", () => {
+        if (settled) return conn.close();
+        settled = true;
+        resolve(wrap(peer, conn));
+      }));
+    });
+  };
+
+  return {
+    host: (code, signal) => connect(peerId(code), signal, (peer, ready) => peer.on("connection", ready)),
+    join: (code, signal) => connect(null, signal, (peer, ready) =>
+      peer.on("open", () => ready(peer.connect(peerId(code), { reliable: true })))),
+  };
+}
+
+export const { host, join } = createLinks();

@@ -1,6 +1,7 @@
 export function renderMenu(games) {
   const buttons = games
-    .map((game) => `<button type="button" class="game-button" data-game-id="${game.id}">${game.name}</button>`)
+    .map((game) => `<button type="button" class="game-button" data-game-id="${game.id}">${game.name}</button>` +
+      (game.online ? `<button type="button" class="game-button game-button--duo" data-online="${game.id}">Zu zweit spielen</button>` : ""))
     .join("");
   const rules = games.filter((game) => game.rulesHtml)
     .map((game) => `<button type="button" class="back-button" data-rules="${game.id}">Regeln</button>`).join("");
@@ -28,7 +29,35 @@ export function renderCredits() {
   return `<div class="screen-bar"><button type="button" class="back-button" data-action="back">Zurück</button></div>` +
     `<section class="credits"><h2>Credits</h2>` +
     `<h3>Karten</h3><ul><li>${link("https://cardmeister.github.io/", "CardMeister")} (Unlicense, gemeinfrei)</li></ul>` +
-    `<h3>Töne</h3><ul>${sounds}</ul></section>`;
+    `<h3>Töne</h3><ul>${sounds}</ul>` +
+    `<h3>Zu zweit spielen</h3><ul><li>${link("https://github.com/peers/peerjs", "PeerJS")} (MIT-Lizenz). ` +
+    `Im Spiel zu zweit baut der öffentliche Vermittlungsserver 0.peerjs.com nur die Verbindung auf. ` +
+    `Dabei sieht er die IP-Adresse beider Browser. Die Spieldaten gehen danach direkt von Browser zu Browser.</li></ul></section>`;
+}
+
+const backBar = `<div class="screen-bar"><button type="button" class="back-button" data-action="back">Zurück</button></div>`;
+
+export function renderRoomChoice() {
+  return backBar + `<section class="room"><h2>Zu zweit spielen</h2>` +
+    `<p>Öffne einen Raum und gib den Code deinem Mitspieler. Oder tritt mit seinem Code bei.</p>` +
+    `<p class="room__actions"><button type="button" class="game-button" data-action="host">Raum öffnen</button>` +
+    `<button type="button" class="game-button" data-action="join">Raum beitreten</button></p></section>`;
+}
+
+// `code` must be a normalized room code. The screen never shows the raw input.
+export function renderRoom(code, status, { copy = false } = {}) {
+  return backBar + `<section class="room"><h2>Raum ${copy ? "geöffnet" : "beitreten"}</h2>` +
+    `<p class="room__code">${code}</p>` +
+    (copy ? `<p class="room__actions"><button type="button" class="back-button" data-action="copy">Code kopieren</button></p>` : "") +
+    `<p class="status" role="status">${status}</p></section>`;
+}
+
+export function renderJoinForm(hint = "") {
+  return backBar + `<section class="room"><h2>Raum beitreten</h2>` +
+    `<form class="room__form"><label for="room-code">Code</label>` +
+    `<input id="room-code" class="room__input" type="text" autocapitalize="characters" autocomplete="off" spellcheck="false" placeholder="KREUZ-42">` +
+    `<button type="submit" class="game-button" data-action="join-code">Beitreten</button></form>` +
+    `<p class="room__hint" role="alert">${hint}</p></section>`;
 }
 
 export function renderRules(game) {
