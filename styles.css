@@ -100,6 +100,7 @@ h1 {
 }
 
 .back-button {
+  min-height: 2.75rem;
   padding: 0.6rem 1.25rem;
   font-size: 1rem;
   background: var(--eichel);
@@ -322,6 +323,48 @@ h1 {
   font-style: italic;
 }
 
+.result {
+  max-width: 24rem;
+  margin: 1.5rem auto 0;
+  padding: 1rem;
+  text-align: center;
+  background: var(--card-bg);
+  border: 3px solid var(--schellen);
+  border-radius: 1.5rem;
+  box-shadow: 0 4px 0 var(--eichel);
+  animation: pop-in 0.4s cubic-bezier(0.3, 1.6, 0.6, 1);
+}
+
+@keyframes pop-in {
+  from { transform: scale(0.6) rotate(-3deg); opacity: 0; }
+}
+
+.result__outcome {
+  margin: 0;
+  font-size: 2rem;
+  font-weight: 800;
+}
+
+.result__outcome--win { color: var(--gruen); }
+.result__outcome--loss { color: var(--rot); }
+.result__outcome--draw { color: var(--schellen); }
+
+.result__points {
+  margin: 0.25rem 0 1rem;
+  font-weight: 700;
+}
+
+.result__title {
+  margin: 1.25rem 0 0.25rem;
+  color: var(--eichel);
+}
+
+.result__scores {
+  display: inline-block;
+  margin: 0;
+  text-align: left;
+}
+
 /* Phone: the trick area fills the lower half, and the cards get the full width. */
 @media (max-width: 30rem) {
   main {
@@ -351,6 +394,10 @@ h1 {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .result {
+    animation: none;
+  }
+
   .card,
   .game-button,
   .back-button,

@@ -9,7 +9,7 @@ const key = (card) => `${card.suit}-${card.rank}`;
 const count = (html, text) => html.split(text).length - 1;
 const stackButtons = (html) => [...html.matchAll(/<button[^>]*data-stack="(\d+)"/g)].map((m) => Number(m[1]));
 const announced = (seed, vorhand = "human", game = "rot") =>
-  rules.applyMove(rules.newGame(seed, vorhand), { type: "announce", game });
+  rules.applyMove(rules.newGame(seed, vorhand === "human" ? "computer" : "human"), { type: "announce", game });
 const legal = (state) => rules.legalStacks(state.players[state.turn].stacks, state.trump, state.trick[0]?.card);
 const step = (state) => rules.applyMove(state, aiMove(state));
 // "rot:7" -> { suit: "rot", rank: "7" }
@@ -23,8 +23,8 @@ const withStacks = (state, player, ups) => ({
 });
 
 test("AC-1: newGame sets turn, trick, and tricks, and the state is plain JSON", () => {
-  for (const vorhand of ["human", "computer"]) {
-    const state = rules.newGame(11, vorhand);
+  for (const [dealer, vorhand] of [["computer", "human"], ["human", "computer"]]) {
+    const state = rules.newGame(11, dealer);
     assert.equal(state.turn, vorhand);
     assert.deepEqual(state.trick, []);
     assert.deepEqual(state.tricks, []);
@@ -45,7 +45,7 @@ test("AC-2: a play move takes the card, reveals the card below, and gives the tu
 });
 
 test("AC-3: applyMove throws before the announcement, for an illegal stack, and after the game", () => {
-  assert.throws(() => rules.applyMove(rules.newGame(3, "human"), { type: "play", stack: 0 }));
+  assert.throws(() => rules.applyMove(rules.newGame(3, "computer"), { type: "play", stack: 0 }));
   // The human leads Rot; the computer has one Rot card in stack 1, so it must follow suit.
   let state = withStacks(announced(3, "human", "grand"), "human", ["rot:A", "rot:7", "rot:8", "rot:9", "rot:K", "rot:O", "rot:10", "gruen:7"]);
   state = withStacks(state, "computer", ["gruen:A", "rot:8", "eichel:K", "schellen:9", "gruen:10", "gruen:O", "gruen:9", "gruen:8"]);
@@ -86,7 +86,7 @@ test("AC-5: aiMove plays a random legal stack after the announcement", () => {
   assert.deepEqual(aiMove(state, () => 0), { type: "play", stack: 0 });
   assert.deepEqual(aiMove(state, () => 0.999), { type: "play", stack: 5 });
   for (let i = 0; i < 20; i++) assert.ok(legal(state).includes(aiMove(state).stack));
-  assert.equal(aiMove(rules.newGame(8, "computer")).type, "announce");
+  assert.equal(aiMove(rules.newGame(8, "human")).type, "announce");
 });
 
 test("AC-6: aiMove for both players plays a full game of 16 tricks", () => {

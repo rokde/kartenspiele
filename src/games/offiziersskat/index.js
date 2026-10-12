@@ -12,10 +12,11 @@ export const name = "Offiziersskat";
 const GAME_NAMES = { ...SUIT_NAMES, grand: "Grand" };
 const symbol = (game) => (SUIT_SYMBOLS[game] ? `<span aria-hidden="true">${SUIT_SYMBOLS[game]}</span> ` : "");
 
-export function newGame(seed, vorhand) {
-  const state = rules.newGame(seed, vorhand);
-  return state.vorhand === "computer" ? rules.applyMove(state, aiMove(state)) : state;
-}
+const announceForComputer = (state) => (state.vorhand === "computer" ? rules.applyMove(state, aiMove(state)) : state);
+
+export const newGame = (seed, dealer) => announceForComputer(rules.newGame(seed, dealer));
+
+export const nextGame = (state, seed) => announceForComputer(rules.nextGame(state, seed));
 
 const PLAYER_NAMES = { human: "Du", computer: "Computer" };
 
@@ -57,6 +58,21 @@ function renderAnnouncement(state) {
   return vorhand + `<div class="announce__buttons" role="group" aria-label="Spiel ansagen">${buttons}</div>`;
 }
 
+const OUTCOMES = { win: "Gewonnen!", loss: "Verloren", draw: "Unentschieden" };
+
+// The button names the result text, so a screen reader reads it with the focus. Newest game first.
+function renderResult(state) {
+  const { human, computer } = rules.points(state);
+  const outcome = human > 60 ? "win" : human < 60 ? "loss" : "draw";
+  const rows = state.scores.map((s) => `<li>Du ${s.human} : ${s.computer} Computer</li>`).reverse().join("");
+  return `<section class="result" aria-label="Ergebnis">` +
+    `<p class="result__outcome result__outcome--${outcome}" id="result-outcome">${OUTCOMES[outcome]}</p>` +
+    `<p class="result__points" id="result-points">Du ${human} Punkte, Computer ${computer} Punkte</p>` +
+    `<button type="button" class="game-button" data-action="next" aria-describedby="result-outcome result-points">Nächstes Spiel</button>` +
+    `<h3 class="result__title">Spielliste</h3><ol class="result__scores" reversed>${rows}</ol>` +
+    `</section>`;
+}
+
 export function render(state) {
   const playing = state.trump !== null;
   const legal = playing && state.turn === "human" && !rules.isOver(state) ? rules.legalStacksFor(state) : [];
@@ -65,5 +81,5 @@ export function render(state) {
     renderRow("Computer", state.players.computer) +
     (playing ? `<p class="status" role="status" tabindex="-1">${renderStatus(state)}</p>${renderTrick(state)}` : "") +
     renderRow("Du", state.players.human, legal) +
-    `</div>`;
+    `</div>` + (rules.isOver(state) ? renderResult(state) : "");
 }
