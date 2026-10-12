@@ -4,6 +4,8 @@ import { makeRoomCode, normalizeRoomCode } from "./core/room-code.js";
 import { save, load, isSaveOf } from "./core/storage.js";
 import { createSound, timeSounds } from "./core/sound.js";
 import { createMotion, domView } from "./core/motion.js";
+import { hostSession, guestSession } from "./games/offiziersskat/online.js";
+import { newGame as newOnlineGame } from "./games/offiziersskat/rules.js";
 
 export const APP_TITLE = "Karten";
 
@@ -39,6 +41,8 @@ export function startApp({
   let runs = 0;
   // True while the rules page shows on top of the running game.
   let rulesFromGame = false;
+  // The online game: { role: "host" | "guest", session }. The guest state is the view of the host.
+  let online = null;
   const motion = createMotion({ reduced: reducedMotion, setTimeout, clearTimeout });
   const saved = (g) => g.restore(load(store, g.id));
   const sound = createSound(store, { setTimeout, clearTimeout });
@@ -56,13 +60,13 @@ export function startApp({
   });
   showMute();
   const paint = () => {
-    save(store, game.id, state);
-    show(renderGameScreen(game, state, { trickCleared: cleared }));
+    if (!online) save(store, game.id, state);
+    show(renderGameScreen(game, state, { trickCleared: cleared, online: online?.role }));
     (app.querySelector("[data-announce], [data-stack], [data-action=next]") ?? app.querySelector(".status"))?.focus();
   };
   // A short pause, so that the human can see each computer card.
   const computerTurn = () => {
-    if (state.trump !== null && state.turn === "computer" && !game.isOver(state)) {
+    if (!online && state.trump !== null && state.turn === "computer" && !game.isOver(state)) {
       timer = setTimeout(() => {
         go(game.applyMove(state, game.aiMove(state)));
       }, 800);
@@ -95,7 +99,21 @@ export function startApp({
     room?.abort.abort();
     room?.link?.close();
     room = null;
+    online = null;
   };
+  // The host deals the first game. hostSession does not report this start state, so the host renders it here.
+  const startOnline = (role, link) => {
+    state = null;
+    cleared = true;
+    if (role === "guest") {
+      online = { role, session: guestSession(link, go) };
+      return;
+    }
+    const first = newOnlineGame(seed(), "human");
+    online = { role, session: hostSession(link, first, go) };
+    go(first, null);
+  };
+  const move = (m) => (online ? online.session.move(m) : go(game.applyMove(state, m)));
   const openRoom = async (role, code) => {
     const current = room = { code, abort: new AbortController() };
     const host = role === "host";
@@ -106,6 +124,7 @@ export function startApp({
       current.link = link;
       // Only the text changes, so the focus stays and a screen reader reads the live status.
       app.querySelector(".room [role=status]").textContent = "Verbunden";
+      startOnline(host ? "host" : "guest", link);
     } catch {
       // shortcut: one message for all errors, S19 adds a message for each error.
       if (room === current) app.querySelector(".room [role=status]").textContent = "Keine Verbindung. Bitte versuche es noch einmal.";
@@ -137,6 +156,7 @@ export function startApp({
     } else if (button.dataset.rules) {
       show(renderRules(getGame(button.dataset.rules)));
     } else if (button.dataset.online) {
+      game = getGame(button.dataset.online);
       show(renderRoomChoice());
     } else if (button.dataset.action === "host") {
       openRoom("host", makeRoomCode());
@@ -168,11 +188,12 @@ export function startApp({
       clearTimeout(timer);
       go(game.restart(state, seed()), null);
     } else if (button.dataset.action === "next") {
-      go(game.nextGame(state, seed()));
+      if (online) online.session.next(seed());
+      else go(game.nextGame(state, seed()));
     } else if (button.dataset.announce) {
-      go(game.applyMove(state, { type: "announce", game: button.dataset.announce }));
+      move({ type: "announce", game: button.dataset.announce });
     } else if (button.dataset.stack) {
-      go(game.applyMove(state, { type: "play", stack: Number(button.dataset.stack) }));
+      move({ type: "play", stack: Number(button.dataset.stack) });
     }
   });
 

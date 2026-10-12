@@ -193,7 +193,7 @@ function setup() {
   return { app, parts, calls, click, status: () => parts[".room [role=status]"].textContent };
 }
 
-test("AC-6: the menu has Zu zweit spielen, and Raum öffnen shows a code, a copy button, and Verbunden", async () => {
+test("AC-6: the menu has Zu zweit spielen, and Raum öffnen shows a code, a copy button, and then the game", async () => {
   assert.match(renderMenu(listGames()), /<button type="button"[^>]*data-online="offiziersskat"[^>]*>Zu zweit spielen<\/button>/);
   const t = setup();
   await t.click('data-online="offiziersskat"');
@@ -205,11 +205,10 @@ test("AC-6: the menu has Zu zweit spielen, and Raum öffnen shows a code, a copy
   assert.match(t.app.innerHTML, /<button type="button"[^>]*data-action="copy"[^>]*>Code kopieren<\/button>/);
   assert.equal(t.status(), "Warte auf Mitspieler …");
   assert.deepEqual([t.calls[0].role, t.calls[0].code], ["host", code]);
-  const screen = t.app.innerHTML;
   t.calls[0].open();
   await settle();
-  assert.equal(t.status(), "Verbunden");
-  assert.equal(t.app.innerHTML, screen, "the screen is not rendered again, so the focus stays");
+  // S18: the host starts the game when the link opens.
+  assert.match(t.app.innerHTML, /class="game-screen"/);
 });
 
 test("AC-7: Raum beitreten normalizes the code, rejects an invalid code, and Zurück closes the link", async () => {
