@@ -1,6 +1,7 @@
 import { listGames, getGame } from "./core/registry.js";
-import { renderMenu, renderGameScreen } from "./core/menu-view.js";
+import { renderMenu, renderGameScreen, renderCredits } from "./core/menu-view.js";
 import { save, load } from "./core/storage.js";
+import { createSound } from "./core/sound.js";
 
 export const APP_TITLE = "Karten";
 
@@ -20,6 +21,19 @@ if (typeof document !== "undefined") {
   // Reading localStorage throws when the browser blocks it. Then the game runs without a save.
   const store = (() => { try { return localStorage; } catch { return null; } })();
   const saved = (g) => g.restore(load(store, g.id));
+  const sound = createSound(store);
+  for (const type of ["pointerdown", "keydown", "click"]) document.addEventListener(type, sound.unlock, { capture: true });
+  const mute = document.getElementById("mute");
+  const showMute = () => {
+    mute.setAttribute("aria-pressed", String(sound.isMuted()));
+    mute.querySelector(".mute-button__label").textContent = sound.isMuted() ? "Ton aus" : "Ton an";
+    mute.querySelector(".mute-button__icon").textContent = sound.isMuted() ? "🔇" : "🔊";
+  };
+  mute.addEventListener("click", () => {
+    sound.setMuted(!sound.isMuted());
+    showMute();
+  });
+  showMute();
   const showGame = () => {
     save(store, game.id, state);
     show(renderGameScreen(game, state));
@@ -27,10 +41,15 @@ if (typeof document !== "undefined") {
     // A short pause, so that the human can see each computer card.
     if (state.trump !== null && state.turn === "computer" && !game.isOver(state)) {
       timer = setTimeout(() => {
-        state = game.applyMove(state, game.aiMove(state));
-        showGame();
+        go(game.applyMove(state, game.aiMove(state)));
       }, 800);
     }
+  };
+  // The resume on page load does not come here, so it plays no sound.
+  const go = (next, prev = state) => {
+    for (const event of game.soundEvents(prev, next)) sound.play(event);
+    state = next;
+    showGame();
   };
 
   app.addEventListener("click", (event) => {
@@ -39,23 +58,22 @@ if (typeof document !== "undefined") {
     if (button.dataset.action === "back") {
       clearTimeout(timer);
       show(menuHtml());
+    } else if (button.dataset.action === "credits") {
+      show(renderCredits());
     } else if (button.dataset.gameId) {
       game = getGame(button.dataset.gameId);
-      state = saved(game) ?? game.newGame(seed());
-      showGame();
+      state = saved(game);
+      if (state) showGame();
+      else go(game.newGame(seed()), null);
     } else if (button.dataset.action === "new") {
       clearTimeout(timer);
-      state = game.restart(state, seed());
-      showGame();
+      go(game.restart(state, seed()), null);
     } else if (button.dataset.action === "next") {
-      state = game.nextGame(state, seed());
-      showGame();
+      go(game.nextGame(state, seed()));
     } else if (button.dataset.announce) {
-      state = game.applyMove(state, { type: "announce", game: button.dataset.announce });
-      showGame();
+      go(game.applyMove(state, { type: "announce", game: button.dataset.announce }));
     } else if (button.dataset.stack) {
-      state = game.applyMove(state, { type: "play", stack: Number(button.dataset.stack) });
-      showGame();
+      go(game.applyMove(state, { type: "play", stack: Number(button.dataset.stack) }));
     }
   });
 
