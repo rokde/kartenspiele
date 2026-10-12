@@ -1,6 +1,6 @@
 import { listGames, getGame } from "./core/registry.js";
 import { renderMenu, renderGameScreen, renderCredits, renderRules } from "./core/menu-view.js";
-import { save, load } from "./core/storage.js";
+import { save, load, isSaveOf } from "./core/storage.js";
 import { createSound } from "./core/sound.js";
 import { createMotion, domView } from "./core/motion.js";
 
@@ -13,7 +13,7 @@ if (typeof document !== "undefined") {
     // The clicked button is gone, so move the keyboard focus to the new screen.
     app.querySelector("button")?.focus();
   };
-  const menuHtml = () => `<h1>${APP_TITLE}</h1>${renderMenu(listGames())}`;
+  const menuHtml = (note = "") => `<h1>${APP_TITLE}</h1>${note}${renderMenu(listGames())}`;
 
   let game;
   let state;
@@ -94,6 +94,7 @@ if (typeof document !== "undefined") {
     } else if (button.dataset.gameId) {
       game = getGame(button.dataset.gameId);
       state = saved(game);
+      cleared = true;
       if (state) showGame();
       else go(game.newGame(seed()), null);
     } else if (button.dataset.action === "new") {
@@ -108,9 +109,19 @@ if (typeof document !== "undefined") {
     }
   });
 
+  // Another tab changed the save. This tab stops and shows the menu, so it never writes an old state.
+  addEventListener("storage", (event) => {
+    if (!game || !isSaveOf(event, game.id) || !(rulesFromGame || app.querySelector(".game-screen"))) return;
+    clearTimeout(timer);
+    runs++;
+    rulesFromGame = false;
+    show(menuHtml(`<p class="status" role="status">Das Spiel wurde in einem anderen Tab weitergespielt.</p>`));
+  });
+
   document.title = APP_TITLE;
   app.innerHTML = menuHtml();
   // Resume the first game with a valid save.
   game = listGames().find((g) => (state = saved(g)));
+  cleared = true;
   if (game) showGame();
 }

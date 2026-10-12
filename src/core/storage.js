@@ -18,3 +18,6 @@ export function load(storage, gameId) {
     return null;
   }
 }
+
+// True when a `storage` event changed the save of this game. A null key means `localStorage.clear()`.
+export const isSaveOf = (event, gameId) => event.key === null || event.key === key(gameId);
