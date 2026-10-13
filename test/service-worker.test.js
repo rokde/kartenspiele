@@ -32,7 +32,7 @@ function worker(version, precache = []) {
     async keys() { return [...store.keys()]; },
     async delete(name) { calls.deleted.push(name); return store.delete(name); },
     async match(r) {
-      for (const c of store.values()) if (c.has(url(r))) return c.get(url(r));
+      for (const c of store.values()) if (c.has(url(r))) return c.get(url(r))?.clone?.() ?? c.get(url(r));
       return undefined;
     },
   };
@@ -46,15 +46,16 @@ function worker(version, precache = []) {
     clients: { claim: async () => { calls.claim++; } },
   };
   const fetch = (req) => { calls.fetch.push(url(req)); return network(req); };
-  vm.runInNewContext(code, { self, caches, fetch, Request, URL, Promise });
+  vm.runInNewContext(code, { self, caches, fetch, Request, Response, URL, Promise });
   const lifecycle = async (type) => {
     let wait;
     listeners[type]({ waitUntil: (p) => { wait = p; } });
     await wait;
   };
-  const request = (path, { method = "GET", mode = "cors" } = {}) => {
+  const request = (path, { method = "GET", mode = "cors", headers = {} } = {}) => {
     let response;
-    const event = { request: { url: new URL(path, BASE).href, method, mode }, respondWith: (p) => { response = p; } };
+    const req = { url: new URL(path, BASE).href, method, mode, headers: new Headers(headers) };
+    const event = { request: req, respondWith: (p) => { response = p; } };
     listeners.fetch(event);
     return response;
   };
@@ -70,8 +71,8 @@ test("S29 AC-4: a versioned worker precaches, cleans up and serves offline", asy
   assert.equal(w.calls.skipWaiting, 1);
 
   await w.lifecycle("activate");
-  assert.deepEqual(w.calls.deleted.sort(), ["karten-old", "other"]);
-  assert.deepEqual([...w.store.keys()], ["karten-abc123"]);
+  assert.deepEqual(w.calls.deleted, ["karten-old"]);
+  assert.deepEqual([...w.store.keys()].sort(), ["karten-abc123", "other"]);
   assert.equal(w.calls.claim, 1);
 
   assert.equal(await w.request("src/main.js?v=abc123"), `cache:${ORIGIN}/app/src/main.js?v=abc123`);
@@ -97,7 +98,32 @@ test("S29 AC-5: the dev worker caches nothing and never answers", async () => {
   assert.equal(w.request("./", { mode: "navigate" }), undefined);
   assert.equal(w.request("src/main.js"), undefined);
   await w.lifecycle("activate");
-  assert.deepEqual([...w.store.keys()], []);
+  assert.deepEqual([...w.store.keys()], ["other"]);
+});
+
+test("S29 round 1: a range request for a cached file gets a 206 slice, other ranges go to the network", async () => {
+  const w = worker("abc123");
+  await w.lifecycle("install");
+  const file = `${ORIGIN}/app/assets/sounds/win.mp3`;
+  w.store.get("karten-abc123").set(file, new Response("0123456789", { headers: { "Content-Type": "audio/mpeg" } }));
+  const range = async (value, size, text, contentRange) => {
+    const r = await w.request("assets/sounds/win.mp3", { headers: { Range: value } });
+    assert.equal(r.status, 206, value);
+    assert.equal(await r.text(), text);
+    assert.equal(r.headers.get("Content-Range"), contentRange);
+    assert.equal(r.headers.get("Content-Length"), String(size));
+    assert.equal(r.headers.get("Content-Type"), "audio/mpeg");
+    assert.equal(r.headers.get("Accept-Ranges"), "bytes");
+  };
+  await range("bytes=2-5", 4, "2345", "bytes 2-5/10");
+  await range("bytes=7-", 3, "789", "bytes 7-9/10");
+  await range("bytes=8-99", 2, "89", "bytes 8-9/10");
+  assert.deepEqual(w.calls.fetch, []);
+  for (const value of ["bytes=0-1,4-5", "bytes=-3", "items=0-1", "bytes=20-"]) {
+    assert.equal(await w.request("assets/sounds/win.mp3", { headers: { Range: value } }), `net:${file}`, value);
+  }
+  assert.equal(w.calls.fetch.length, 4);
+  assert.equal(await (await w.request("assets/sounds/win.mp3")).text(), "0123456789");
 });
 
 test("S29 AC-6: registerServiceWorker registers sw.js only in a secure context", async () => {
