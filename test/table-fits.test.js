@@ -21,7 +21,7 @@ const fitWidth = (height) => (height - fitConstant * 16) / 3.6;
 test("AC-1: one breakpoint at 48rem, the card width comes from dvh with a vh fallback", () => {
   assert.doesNotMatch(css, /max-width: 30rem/);
   assert.match(wide, /@supports \(height: 100dvh\) \{\s*\.table \{\s*--fit-w: max\(3\.5rem, \(100dvh - [\d.]+rem\) \/ 3\.6\);/);
-  assert.match(wide, /main \{\s*padding-bottom: 1rem;/);
+  assert.match(wide, /main \{\s*padding-bottom: calc\(1rem \+ env\(safe-area-inset-bottom, 0px\)\);/);
   assert.match(css, /\.row \{[^}]*grid-template-columns: repeat\(var\(--cols\), minmax\(0, var\(--w\)\)\);/);
 });
 
@@ -40,7 +40,7 @@ test("AC-3: on a phone, the opponent row is one line of 8, the own row is 2 line
 });
 
 test("AC-4: on a phone, main keeps room for the fixed mute button", () => {
-  const [, bottom] = phone.match(/main \{\s*padding: 0\.5rem 0\.5rem ([\d.]+)rem;/);
+  const [, bottom] = phone.match(/main \{\s*padding: 0\.5rem max\(0\.5rem, env\(safe-area-inset-right, 0px\)\) calc\(([\d.]+)rem \+ env\(safe-area-inset-bottom, 0px\)\) max\(0\.5rem, env\(safe-area-inset-left, 0px\)\);/);
   // The mute button: 0.75rem from the bottom, 2.75rem high.
   assert.ok(Number(bottom) >= 3.5);
 });

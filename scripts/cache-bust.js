@@ -13,6 +13,7 @@ export function rewrite(text, kind, version) {
   const tag = `?v=${version}`;
   if (kind === "js") return text.replace(JS_SPECIFIER, (_, pre, q, url) => `${pre}${q}${url}${tag}${q}`);
   return text.replace(HTML_TAG, (el, name) => {
+    // shortcut: manifest and icons are not versioned, add them when icons change often or S29 caches them
     if (name === "link" && !/\brel\s*=\s*["']?stylesheet/.test(el)) return el;
     return el.replace(HTML_ATTR, (_, pre, q, url) => `${pre}${q}${url}${tag}${q}`);
   });

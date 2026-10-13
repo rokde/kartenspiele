@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="35%" r="75%">
+      <stop offset="0" stop-color="#d0392f"/>
+      <stop offset="1" stop-color="#9c1f18"/>
+    </radialGradient>
+    <rect id="card" x="-92" y="-300" width="184" height="256" rx="24"/>
+    <path id="herz" d="M0 40C-30 15-55-5-55-28C-55-48-40-60-24-60C-12-60-4-53 0-44C4-53 12-60 24-60C40-60 55-48 55-28C55-5 30 15 0 40Z"/>
+    <g id="eichel">
+      <ellipse cx="0" cy="14" rx="27" ry="36" fill="#9a5b00"/>
+      <ellipse cx="-9" cy="8" rx="7" ry="14" fill="#fffaf2" opacity="0.35"/>
+      <path d="M-34-4C-34-36 34-36 34-4Z" fill="#7a4a12"/>
+      <circle cx="-16" cy="-14" r="4" fill="#fdf3e1"/>
+      <circle cx="0" cy="-20" r="4" fill="#fdf3e1"/>
+      <circle cx="16" cy="-14" r="4" fill="#fdf3e1"/>
+      <path d="M-4-28L-5-44Q2-48 6-42L4-28Z" fill="#7a4a12"/>
+    </g>
+    <g id="laub">
+      <path d="M0 44C-40 20-44-30 0-56C44-30 40 20 0 44Z" fill="#2f6b2a"/>
+      <path d="M0-44V56M0-14L-18-28M0-14L18-28M0 10L-20-4M0 10L20-4" stroke="#fdf3e1" stroke-width="5" stroke-linecap="round" fill="none"/>
+    </g>
+  </defs>
+  <rect width="512" height="512" fill="url(#bg)"/>
+  <g id="motif" stroke-linejoin="round">
+    <g transform="translate(262 424)">
+      <use href="#card" transform="rotate(-22)" fill="#3b2414" opacity="0.25"/>
+      <use href="#card" transform="rotate(22)" fill="#3b2414" opacity="0.25"/>
+      <use href="#card" fill="#3b2414" opacity="0.25"/>
+    </g>
+    <g transform="translate(256 416) rotate(-22)">
+      <use href="#card" fill="#fffaf2" stroke="#7a4a12" stroke-width="8"/>
+      <use href="#eichel" transform="translate(-42 -236) scale(0.8)"/>
+    </g>
+    <g transform="translate(256 416) rotate(22)">
+      <use href="#card" fill="#fffaf2" stroke="#7a4a12" stroke-width="8"/>
+      <use href="#laub" transform="translate(42 -234) scale(0.8)"/>
+    </g>
+    <g transform="translate(256 416)">
+      <use href="#card" fill="#fffaf2" stroke="#7a4a12" stroke-width="8"/>
+      <use href="#herz" transform="translate(0 -168) scale(1.25)" fill="#b3261e"/>
+      <use href="#herz" transform="translate(-62 -268) scale(0.3)" fill="#b3261e"/>
+      <use href="#herz" transform="translate(62 -76) rotate(180) scale(0.3)" fill="#b3261e"/>
+    </g>
+  </g>
+</svg>
