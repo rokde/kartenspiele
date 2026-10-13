@@ -1,12 +1,11 @@
 export function renderMenu(games) {
-  const buttons = games
-    .map((game) => `<button type="button" class="game-button" data-game-id="${game.id}">${game.name}</button>` +
-      (game.online ? `<button type="button" class="game-button game-button--duo" data-online="${game.id}">${game.onlineLabel ?? "Zu zweit spielen"}</button>` : ""))
-    .join("");
-  const rules = games.filter((game) => game.rulesHtml)
-    .map((game) => `<button type="button" class="back-button" data-rules="${game.id}" aria-label="Regeln ${game.name}" title="Regeln ${game.name}">Regeln</button>`).join("");
-  return `<nav class="menu" aria-label="Spiele">${buttons}</nav>` +
-    `<p class="menu-extra">${rules}<button type="button" class="back-button" data-action="credits">Credits</button></p>`;
+  const rows = games.map((game) => `<div class="menu__row" role="group" aria-label="${game.name}">` +
+    `<button type="button" class="game-button" data-game-id="${game.id}">${game.name}</button>` +
+    (game.online ? `<button type="button" class="game-button game-button--duo" data-online="${game.id}">${game.onlineLabel ?? "Zu zweit spielen"}</button>` : "") +
+    (game.rulesHtml ? `<button type="button" class="back-button" data-rules="${game.id}" aria-label="Regeln ${game.name}" title="Regeln ${game.name}">Regeln</button>` : "") +
+    `</div>`).join("");
+  return `<nav class="menu" aria-label="Spiele">${rows}</nav>` +
+    `<p class="menu-extra"><button type="button" class="back-button" data-action="credits">Credits</button></p>`;
 }
 
 const pixabay = (id, user, author, path) => {
