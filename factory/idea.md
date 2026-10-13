@@ -54,3 +54,9 @@ Coordinator measurements (decoded in Chromium, threshold 5 % of peak): card-play
 
 ## Feedback 6 (2026-10-12)
 "Können wir das Layout der Karten auf maximal 4 Kartenstapel in der Breite machen? Besonders auf dem Handy ist das ein Layoutgewinn. Dann hat man größere Karten. Und die Spielliste sollte auch enden können. Mit einem Neuen Spiel könnte man diese Liste auch resetten."
+
+## Feedback 7 (2026-10-13)
+"leider ist das Layout sowohl auf dem Handy als auch auf dem Desktop jetzt nicht so gut. Auf dem Handy sehe ich die Gegner Karten nicht richtig und auf dem Desktop muss ich auch scrollen. Da war die 8er Reihe zuvor besser nutzbar. Kannst du eine bessere Variante finden also designen?"
+
+Coordinator measurements on Pages after S21/S22: at 375x812 the page is about 1100 px high (own row starts at y≈734, so the own cards are mostly below the fold, and a big empty trick area of ~136 px plus status sits between the rows). At 1280x800 the page is about 1170 px high, own row starts at y≈798, both rows use only ~360 px of the 1280 px width.
+Design decision (coordinator, user asked "designen"): split by screen. Wide screens go back to 8 stacks in one line, with the card size taken from the screen height so the whole table fits. Phones get an asymmetric table: the opponent row is a compact single line of 8 (only needs to be readable), the own row stays 4x2 with big cards (needs to be tapped). Less empty space everywhere, so the whole table fits one screen without scrolling.
