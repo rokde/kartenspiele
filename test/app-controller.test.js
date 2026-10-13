@@ -234,6 +234,7 @@ test("the resume and the return to a saved game play no sound and no motion", as
   const storage = memoryStorage();
   save(storage, "offiziersskat", state);
   const t = setup({ storage });
+  await t.click('data-game-id="offiziersskat"');
   assert.match(t.app.innerHTML, /class="game-screen"/);
   assert.equal(t.clock.pending(TRICK_PAUSE), 0);
   for (const fn of t.document.listeners.click) fn();
@@ -325,8 +326,30 @@ test("S22: Neues Spiel starten saves a new game with an empty score list", async
   const storage = memoryStorage();
   save(storage, "offiziersskat", game.newGame(3, "human", scores));
   const t = setup({ storage });
+  await t.click('data-game-id="offiziersskat"');
   await t.click('data-action="new"');
   await t.click('data-action="new-confirm"');
   assert.doesNotMatch(t.app.innerHTML, /role="alertdialog"/);
   assert.deepEqual(stateIn(t.storage), game.newGame(7, "computer", []));
 });
+
+// S25: a page load shows the menu. A click on the game resumes its save.
+for (const id of ["offiziersskat", "skat"]) {
+  test(`S25: a saved ${id} game does not open on start, and the menu click resumes it`, async () => {
+    const mod = await import(`../src/games/${id}/index.js`);
+    const state = id === "skat" ? mod.newGame(3, 1) : mod.newGame(3, "human", [{ human: 70, computer: 50 }]);
+    const storage = memoryStorage();
+    save(storage, id, state);
+    const before = storage.getItem(`karten:${id}`);
+    const t = setup({ storage });
+    assert.match(t.app.innerHTML, /<h1>Karten<\/h1>/);
+    assert.match(t.app.innerHTML, new RegExp(`data-game-id="${id}"`));
+    assert.doesNotMatch(t.app.innerHTML, /class="game-screen"/);
+    assert.equal(storage.writes, 1);
+    assert.equal(storage.getItem(`karten:${id}`), before);
+    assert.equal(t.clock.timers.size, 0);
+    await t.click(`data-game-id="${id}"`);
+    assert.match(t.app.innerHTML, /class="game-screen"/);
+    assert.deepEqual(JSON.parse(storage.getItem(`karten:${id}`)).data, state);
+  });
+}

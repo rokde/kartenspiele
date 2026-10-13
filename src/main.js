@@ -291,10 +291,7 @@ export function startApp({
 
   document.title = APP_TITLE;
   app.innerHTML = menuHtml();
-  // Resume the first game with a valid save.
-  game = listGames().find((g) => (state = saved(g)));
   cleared = true;
-  if (game) showGame();
 }
 
 if (typeof document !== "undefined") startApp();

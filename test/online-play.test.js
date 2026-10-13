@@ -159,8 +159,7 @@ async function connectPair({ hostStorage = memoryStorage(), guestStorage = memor
       await settle();
     }
   };
-  for (const t of [g, h]) if (t.html().includes('class="game-screen"')) await t.click('data-action="back"');
-  // The resume of a saved single-player game writes its save again. Only the online writes count.
+  // Only the online writes count.
   for (const t of [g, h]) t.storage.writes.length = 0;
   await g.click('data-online="offiziersskat"');
   await g.click('data-action="join"');
