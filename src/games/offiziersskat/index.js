@@ -63,8 +63,8 @@ const announceForComputer = (state) => (state.vorhand === "computer" ? rules.app
 
 export const newGame = (seed, dealer, scores) => announceForComputer(rules.newGame(seed, dealer, scores));
 
-// "Neues Spiel": stop the current game. The dealer changes and the score list stays, with no entry for the stopped game.
-export const restart = (state, seed) => newGame(seed, state.dealer === "human" ? "computer" : "human", state.scores);
+// "Neues Spiel": stop the current game and start an empty score list. The dealer changes.
+export const restart = (state, seed) => newGame(seed, state.dealer === "human" ? "computer" : "human", []);
 
 export const nextGame = (state, seed) => announceForComputer(rules.nextGame(state, seed));
 

@@ -108,16 +108,16 @@ test("AC-5: a restored state continues like the original", () => {
   }
 });
 
-test("AC-6: restart deals a new game, changes the dealer, and keeps the scores", () => {
+test("AC-6: restart deals a new game, changes the dealer, and empties the scores (S22)", () => {
   for (const state of [fresh, playing, done, game.newGame(2, "human", [{ human: 0, computer: 120 }])]) {
     const next = game.restart(state, 11);
     assert.notEqual(next.dealer, state.dealer);
-    assert.deepEqual(next.scores, state.scores);
+    assert.deepEqual(next.scores, []);
     assert.deepEqual(next.tricks, []);
     assert.deepEqual(next.trick, []);
     assert.equal(next.players.human.stacks.length + next.players.computer.stacks.length, 16);
     if (next.vorhand === "human") assert.equal(next.trump, null);
-    assert.deepEqual(next, game.newGame(11, next.dealer, state.scores));
+    assert.deepEqual(next, game.newGame(11, next.dealer, []));
   }
 });
 

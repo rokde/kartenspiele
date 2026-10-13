@@ -45,6 +45,8 @@ export function startApp({
   let myTurn = false;
   // True while the rules page shows on top of the running game.
   let rulesFromGame = false;
+  // True while the game screen asks before "Neues Spiel".
+  let confirming = false;
   // The online game: { role: "host" | "guest", session }. The guest state is the view of the host.
   let online = null;
   const motion = createMotion({ reduced: reducedMotion, setTimeout, clearTimeout });
@@ -65,11 +67,12 @@ export function startApp({
   showMute();
   const paint = () => {
     if (!online) save(store, game.id, state);
-    const html = renderGameScreen(game, state, { trickCleared: cleared, online: online?.role, left: online?.left });
-    const scroll = html.includes("row--playing") && !myTurn;
+    const html = renderGameScreen(game, state, { trickCleared: cleared, online: online?.role, left: online?.left, confirmNew: confirming });
+    const scroll = !confirming && html.includes("row--playing") && !myTurn;
     myTurn = html.includes("row--playing");
     // The first button is at the top. Its focus must not scroll the page away from the table.
     show(html, { preventScroll: true });
+    if (confirming) return app.querySelector("[data-action=new-cancel]")?.focus({ preventScroll: true });
     (app.querySelector("[data-announce], [data-stack], [data-action=next]") ?? app.querySelector(".status"))?.focus({ preventScroll: scroll });
     if (scroll) app.querySelector(".row--playing").scrollIntoView({ block: "nearest", behavior: reducedMotion ? "auto" : "smooth" });
   };
@@ -173,6 +176,7 @@ export function startApp({
   // The player leaves the game screen. No old timer or run may change the game later.
   const leave = () => {
     myTurn = false;
+    confirming = false;
     clearTimeout(timer);
     motion.cancel();
     sound.stop();
@@ -225,7 +229,16 @@ export function startApp({
       if (state) showGame();
       else go(game.newGame(seed()), null);
     } else if (button.dataset.action === "new") {
-      clearTimeout(timer);
+      // The computer must not play behind the question.
+      leave();
+      confirming = true;
+      paint();
+    } else if (button.dataset.action === "new-cancel") {
+      confirming = false;
+      showGame();
+      app.querySelector("[data-action=new]")?.focus({ preventScroll: true });
+    } else if (button.dataset.action === "new-confirm") {
+      confirming = false;
       go(game.restart(state, seed()), null);
     } else if (button.dataset.action === "next") {
       if (online) online.session.next(seed());
