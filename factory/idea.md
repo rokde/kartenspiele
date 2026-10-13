@@ -70,3 +70,7 @@ Coordinator split (user prefers small jobs): S25 start on the menu, S26 one menu
 
 ## Feedback 10 (2026-10-13, via /factory:run)
 "wir brauchen noch einen cache-buster für die assets. irgendwie ist es gerade mit gecachten js files besonders schwer. css und js sollten cachebuster haben"
+
+## Feedback 11 (2026-10-13, via /factory:run)
+"sollen wir noch einen service worker mit manifest bereitstellen, damit sich die Kartenspiele auch als app auf dem handy installieren lassen?"
+Coordinator split (small jobs): S28 manifest + icons (installable), S29 service worker with offline play that respects the S27 cache buster.
