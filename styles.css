@@ -267,6 +267,7 @@ h1 {
 }
 
 .game-screen h2 {
+  margin: 0.5rem 0;
   text-align: center;
   color: var(--red);
 }
@@ -276,19 +277,59 @@ h1 {
   font-style: italic;
 }
 
+/* Phone: the opponent row is one compact line of 8, the own row is 2 lines of 4 big cards. */
 .table {
-  max-width: 44rem;
-  margin: 0 auto;
+  --gap: clamp(0.25rem, 1vw, 0.75rem);
+  --trick-w: 4rem;
+}
+
+.row,
+.row__head {
+  --cols: 4;
+  --w: 5rem;
+}
+
+.row[data-player="computer"],
+.row__head:has(+ .row[data-player="computer"]) {
+  --cols: 8;
+  --w: 3.75rem;
+}
+
+/* Wide: 8 stacks in one line. The card width comes from the viewport height, so both rows and the trick fit. */
+@media (width >= 48rem) {
+  /* The mute button is beside the table, not below it. */
+  main {
+    padding-bottom: 1rem;
+  }
+
+  .table {
+    --trick-w: 4.5rem;
+    --fit-w: max(3.5rem, (100vh - 27.5rem) / 3.6);
+  }
+
+  @supports (height: 100dvh) {
+    .table {
+      --fit-w: max(3.5rem, (100dvh - 27.5rem) / 3.6);
+    }
+  }
+
+  .row,
+  .row__head,
+  .row[data-player="computer"],
+  .row__head:has(+ .row[data-player="computer"]) {
+    --cols: 8;
+    --w: var(--fit-w);
+  }
 }
 
 .row__head {
-  /* The width of the 4 capped stacks, so the label and the pile align with the centered row. */
-  max-width: calc(4 * 5rem + 3 * clamp(0.25rem, 1vw, 0.75rem));
+  /* The width of the capped stacks, so the label and the pile align with the centered row. */
+  max-width: calc(var(--cols) * var(--w) + (var(--cols) - 1) * var(--gap));
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 0.5rem;
-  margin: 1rem auto 0.5rem;
+  margin: 0.5rem auto 0.25rem;
 }
 
 .row__label {
@@ -335,17 +376,14 @@ h1 {
   text-align: center;
 }
 
-/* 8 stacks in 2 lines of 4. The cap keeps the table near the height of a desktop screen. */
 .row {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 5rem));
+  grid-template-columns: repeat(var(--cols), minmax(0, var(--w)));
   justify-content: center;
-  gap: clamp(0.25rem, 1vw, 0.75rem);
+  gap: var(--gap);
   margin: 0;
   padding: 0;
   list-style: none;
-  /* The scroll to the own row stops above the fixed mute button. */
-  scroll-margin-bottom: 4rem;
 }
 
 /* On the human turn, stacks that are not legal look faded. Fade the whole stack, so the back does not show through. */
@@ -441,9 +479,10 @@ h1 {
 
 .announce {
   display: flex;
-  flex-direction: column;
+  flex-wrap: wrap;
+  justify-content: center;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.5rem 0.75rem;
   text-align: center;
 }
 
@@ -508,7 +547,7 @@ h1 {
 }
 
 .status {
-  margin: 1rem 0 0;
+  margin: 0.25rem 0 0;
   font-weight: 700;
   text-align: center;
 }
@@ -518,19 +557,25 @@ h1 {
   outline: none;
 }
 
+/* Room for one trick card with its label and the winner caption, so the own row does not move. */
 .trick {
   position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
-  min-height: 9.5rem;
+  min-height: calc(var(--trick-w) * 334 / 240 + 3rem);
+}
+
+/* The own label and pile sit beside the bottom of the trick, not below it. */
+.trick + .row__head {
+  margin-top: calc(-1.6rem * 334 / 240);
 }
 
 .trick__cards {
   display: flex;
   justify-content: center;
   gap: 1rem;
-  margin: 0.5rem 0 0;
+  margin: 0.25rem 0 0;
   padding: 0;
   list-style: none;
 }
@@ -562,8 +607,9 @@ h1 {
   flex-direction: column;
   align-items: center;
   gap: 0.25rem;
-  width: 4.5rem;
+  width: var(--trick-w);
   font-size: 0.85rem;
+  line-height: 1.2;
 }
 
 .trick__card .card {
@@ -579,8 +625,9 @@ h1 {
 }
 
 .trick__winner {
-  margin: 0.5rem 0 0;
+  margin: 0.25rem 0 0;
   font-style: italic;
+  line-height: 1.2;
 }
 
 .result {
@@ -657,30 +704,57 @@ h1 {
   text-align: left;
 }
 
-/* Phone: less space between the parts, so the trick and more of the own row fit on the screen. */
-@media (max-width: 30rem) {
+/* Phone: a compact top, so the whole table fits above the fixed mute button. */
+@media (width < 48rem) {
   main {
-    padding: 0.5rem 0.5rem 4.5rem;
+    padding: 0.5rem 0.5rem 3.75rem;
   }
 
-  .row__head {
-    margin: 0.5rem auto 0.25rem;
+  .screen-bar {
+    gap: 0.5rem;
   }
 
-  .status {
-    margin-top: 0.5rem;
+  .screen-bar .back-button {
+    min-height: 2.5rem;
+    padding: 0.4rem 1rem;
   }
 
-  .trick {
-    min-height: 8.5rem;
+  .game-screen h2 {
+    margin: 0.25rem 0;
+    font-size: 1.25rem;
   }
 
-  .trick__cards {
-    margin-top: 0.25rem;
+  .announce {
+    gap: 0.25rem 0.5rem;
   }
 
-  .trick__card {
-    width: 4rem;
+  /* The 5 announce buttons fit in one line at 375 px. */
+  .announce__buttons {
+    gap: 0.25rem;
+  }
+
+  .announce-button {
+    padding: 0.35rem 0.5rem;
+    font-size: 0.875rem;
+  }
+
+  .trump-badge {
+    padding: 0.2rem 0.8rem;
+    font-size: 1rem;
+  }
+
+  /* The scroll to the own row stops above the fixed mute button. */
+  .row {
+    scroll-margin-bottom: 4rem;
+  }
+
+  /* The opponent cards overlap like a fan. Each card shows its corner index, at a readable size. */
+  .row[data-player="computer"] {
+    grid-template-columns: repeat(7, minmax(0, var(--w))) var(--w);
+  }
+
+  .row[data-player="computer"] .stack {
+    width: var(--w);
   }
 }
 
