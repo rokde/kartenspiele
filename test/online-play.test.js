@@ -100,7 +100,10 @@ function browser(link, storage = memoryStorage(), connect = async () => link) {
     },
   });
   const query = app.querySelector;
-  app.querySelector = (selector) => (selector === ".room [role=status]" ? status : query(selector));
+  // The fake own row logs each scroll.
+  const scrolls = [];
+  const row = { scrollIntoView: (options) => scrolls.push(options) };
+  app.querySelector = (selector) => (selector === ".room [role=status]" ? status : selector === ".row--playing" ? row : query(selector));
   const windowListeners = {};
   const mute = fakeElement(`<span class="mute-button__icon"></span><span class="mute-button__label"></span>`);
   const document = { title: "", listeners: {}, getElementById: (id) => ({ app, mute })[id] };
@@ -128,7 +131,7 @@ function browser(link, storage = memoryStorage(), connect = async () => link) {
     await settle();
   };
   const html = () => app.innerHTML;
-  return { clock, app, storage, sounds, click, html, link, status: () => status.textContent, windowListeners };
+  return { clock, app, storage, sounds, click, html, link, status: () => status.textContent, windowListeners, scrolls };
 }
 
 // Two connected browsers. The link holds each message until flush(), so each browser runs alone.
@@ -245,6 +248,22 @@ test("AC-3: only the browser in turn can click, a click plays in both browsers, 
   await ctx.g.clock.tick(10000);
   await ctx.flush();
   assert.deepEqual([ctx.h.html(), ctx.g.html()], before);
+});
+
+test("S21: each browser scrolls its own row into view only when its turn starts", async () => {
+  const ctx = await connectPair();
+  await announce(ctx);
+  const starts = { human: 0, computer: 0 };
+  let last = null;
+  for (let i = 0; i < 8; i++) {
+    const seat = seatOf(ctx.state);
+    if (seat !== last) starts[seat]++;
+    last = seat;
+    assert.equal(ctx.h.scrolls.length, starts.human);
+    assert.equal(ctx.g.scrolls.length, starts.computer);
+    await playOne(ctx);
+  }
+  assert.deepEqual(ctx.h.scrolls[0], { block: "nearest", behavior: "auto" });
 });
 
 test("AC-4: both browsers play deal and play sounds, and each runs the trick motion", async () => {

@@ -82,6 +82,10 @@ function setup({ storage = memoryStorage() } = {}) {
   const document = { title: "", listeners: {}, getElementById: (id) => ({ app, mute })[id] };
   document.addEventListener = (type, fn) => (document.listeners[type] ??= []).push(fn);
   const windowListeners = {};
+  // The fake own row logs each scroll.
+  const scrolls = [];
+  const query = app.querySelector;
+  app.querySelector = (selector) => (selector === ".row--playing" ? { scrollIntoView: (options) => scrolls.push(options) } : query(selector));
   startApp({
     document,
     storage,
@@ -100,7 +104,7 @@ function setup({ storage = memoryStorage() } = {}) {
     for (const fn of app.listeners.click) fn({ target: { closest: () => ({ dataset }) } });
     await settle();
   };
-  return { clock, app, document, storage, click, windowListeners };
+  return { clock, app, document, storage, click, windowListeners, scrolls };
 }
 
 const { startApp, APP_TITLE } = await import("../src/main.js");
@@ -267,4 +271,19 @@ test("S20 AC-6: a new run and leaving the game screen pause the sound and leave 
   await t.click('data-action="back"');
   assert.deepEqual(log.at(-1), ["pause", deal]);
   assert.equal(t.clock.timers.size, 0);
+});
+
+test("S21: the own row scrolls into view only when the turn of the player starts", async () => {
+  const t = setup();
+  await t.click('data-game-id="offiziersskat"');
+  assert.equal(t.scrolls.length, 0);
+  await t.click("data-announce=");
+  assert.deepEqual(t.scrolls, [{ block: "nearest", behavior: "auto" }]);
+  await t.click('data-action="rules"');
+  await t.click('data-action="back"');
+  assert.equal(t.scrolls.length, 2, "the return from the rules page shows the row again");
+  await t.click("data-stack=");
+  assert.equal(t.scrolls.length, 2);
+  while (stateIn(t.storage).turn === "computer") await t.clock.tick(800);
+  assert.equal(t.scrolls.length, 3);
 });

@@ -28,10 +28,10 @@ export function startApp({
   clipboard = globalThis.navigator?.clipboard,
 } = {}) {
   const app = document.getElementById("app");
-  const show = (html) => {
+  const show = (html, focus) => {
     app.innerHTML = html;
     // The clicked button is gone, so move the keyboard focus to the new screen.
-    app.querySelector("button")?.focus();
+    app.querySelector("button")?.focus(focus);
   };
   const menuHtml = (note = "") => `<h1>${APP_TITLE}</h1>${note}${renderMenu(listGames())}`;
 
@@ -41,6 +41,8 @@ export function startApp({
   // A trick that the motion swept away stays hidden. A counter drops the end of an old run.
   let cleared = false;
   let runs = 0;
+  // True while the own row has cards to play. Only the change to true scrolls the row into view.
+  let myTurn = false;
   // True while the rules page shows on top of the running game.
   let rulesFromGame = false;
   // The online game: { role: "host" | "guest", session }. The guest state is the view of the host.
@@ -63,8 +65,13 @@ export function startApp({
   showMute();
   const paint = () => {
     if (!online) save(store, game.id, state);
-    show(renderGameScreen(game, state, { trickCleared: cleared, online: online?.role, left: online?.left }));
-    (app.querySelector("[data-announce], [data-stack], [data-action=next]") ?? app.querySelector(".status"))?.focus();
+    const html = renderGameScreen(game, state, { trickCleared: cleared, online: online?.role, left: online?.left });
+    const scroll = html.includes("row--playing") && !myTurn;
+    myTurn = html.includes("row--playing");
+    // The first button is at the top. Its focus must not scroll the page away from the table.
+    show(html, { preventScroll: true });
+    (app.querySelector("[data-announce], [data-stack], [data-action=next]") ?? app.querySelector(".status"))?.focus({ preventScroll: scroll });
+    if (scroll) app.querySelector(".row--playing").scrollIntoView({ block: "nearest", behavior: reducedMotion ? "auto" : "smooth" });
   };
   // A short pause, so that the human can see each computer card.
   const computerTurn = () => {
@@ -165,6 +172,7 @@ export function startApp({
 
   // The player leaves the game screen. No old timer or run may change the game later.
   const leave = () => {
+    myTurn = false;
     clearTimeout(timer);
     motion.cancel();
     sound.stop();
