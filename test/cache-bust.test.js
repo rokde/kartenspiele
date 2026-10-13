@@ -1,10 +1,10 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { mkdtempSync, mkdirSync, writeFileSync, readFileSync } from "node:fs";
+import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, copyFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { spawnSync } from "node:child_process";
-import { rewrite, check } from "../scripts/cache-bust.js";
+import { rewrite, check, precacheList } from "../scripts/cache-bust.js";
 
 const V = "abc123";
 const CLI = new URL("../scripts/cache-bust.js", import.meta.url).pathname;
@@ -73,6 +73,12 @@ function makeSite() {
   writeFileSync(join(dir, "src/main.js"), `import { a } from "./core/a.js";\nimport("./games/x/b.js");\n`);
   writeFileSync(join(dir, "src/core/a.js"), `export { z } from "./z.js";\ns.src = new URL("../../vendor/p.js", import.meta.url).href;\n`);
   writeFileSync(join(dir, "src/games/x/b.js"), `import {\n  q,\n} from "../../core/a.js";\n`);
+  for (const d of ["assets/icons", "assets/sounds", "vendor/cardmeister", "vendor/peerjs"]) mkdirSync(join(dir, d), { recursive: true });
+  for (const f of ["assets/icons/icon.svg", "assets/icons/icon-192.png", "assets/sounds/win.mp3", "src/core/data.json",
+    "vendor/cardmeister/elements.cardmeister.full.js", "vendor/peerjs/peerjs.min.js", "manifest.webmanifest", "styles.css"]) {
+    writeFileSync(join(dir, f), "");
+  }
+  copyFileSync(new URL("../sw.js", import.meta.url), join(dir, "sw.js"));
   return dir;
 }
 
@@ -112,4 +118,42 @@ test("AC-8: repo sources have no ?v=", () => {
   assert.doesNotMatch(html, /\?v=/);
   const r = spawnSync("grep", ["-rl", "?v=", "src"], { cwd: new URL("..", import.meta.url).pathname, encoding: "utf8" });
   assert.equal(r.stdout, "");
+});
+
+test("S29 AC-1: precacheList lists the app shell with the deploy URLs", () => {
+  const dir = makeSite();
+  assert.deepEqual(precacheList(dir, V), [
+    "./", "index.html", "styles.css?v=abc123",
+    "src/core/a.js?v=abc123", "src/games/x/b.js?v=abc123", "src/main.js?v=abc123",
+    "vendor/cardmeister/elements.cardmeister.full.js?v=abc123",
+    "manifest.webmanifest", "assets/icons/icon-192.png", "assets/icons/icon.svg", "assets/sounds/win.mp3",
+  ]);
+});
+
+test("S29 AC-2: CLI writes version and precache list into sw.js, fails without placeholders", () => {
+  const dir = makeSite();
+  const expected = precacheList(dir, V);
+  const r = spawnSync("node", [CLI, dir, V], { encoding: "utf8" });
+  assert.equal(r.status, 0, r.stderr);
+  const sw = readFileSync(join(dir, "sw.js"), "utf8");
+  assert.ok(sw.includes(`const VERSION = "abc123";`));
+  assert.deepEqual(JSON.parse(sw.match(/^const PRECACHE = (.*);$/m)[1]), expected);
+
+  const again = spawnSync("node", [CLI, dir, V], { encoding: "utf8" });
+  assert.notEqual(again.status, 0);
+  assert.match(again.stderr, /placeholder/);
+  const noSw = makeSite();
+  rmSync(join(noSw, "sw.js"));
+  const missing = spawnSync("node", [CLI, noSw, V], { encoding: "utf8" });
+  assert.notEqual(missing.status, 0);
+  assert.match(missing.stderr, /sw\.js/);
+
+  const repo = readFileSync(new URL("../sw.js", import.meta.url), "utf8");
+  assert.ok(repo.includes(`const VERSION = "dev";`) && repo.includes("const PRECACHE = [];"));
+});
+
+test("S29 AC-3: Collect site files copies sw.js before the cache-bust step", () => {
+  const y = readFileSync(new URL("../.github/workflows/pages.yml", import.meta.url), "utf8");
+  const step = y.slice(y.indexOf("Collect site files"), y.indexOf("cache-bust.js"));
+  assert.match(step, /cp -r [^\n]*\bsw\.js\b[^\n]*_site\//);
 });

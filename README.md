@@ -18,6 +18,18 @@ Then open `http://localhost:8000/`.
 node --test
 ```
 
+## Offline
+
+After one visit to the deployed site, the single-player games work without a network. The service worker `sw.js` keeps the app files in a cache. Online play still needs the network.
+
+The repo `sw.js` is in dev mode: it caches nothing, so the local server always gives fresh files. To test the worker locally, copy the site as the deploy workflow does, then add a version and serve the copy:
+
+```sh
+mkdir /tmp/site && cp -r index.html styles.css manifest.webmanifest sw.js src assets vendor /tmp/site/
+node scripts/cache-bust.js /tmp/site v1
+python3 -m http.server 8001 --bind 127.0.0.1 --directory /tmp/site
+```
+
 ## App icons
 
 Render each PNG in `assets/icons/` once from its SVG (`icon.svg`, or `icon-maskable.svg` for `icon-maskable-512.png`): serve the repo, then run `playwright-cli open <svg url>`, `resize <size> <size>` and `screenshot --filename=assets/icons/<name>.png`.

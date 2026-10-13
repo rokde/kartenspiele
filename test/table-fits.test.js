@@ -52,7 +52,7 @@ test("AC-5: the trick reserves only one trick card, its label and the caption", 
 });
 
 test("AC-6: on a phone, the scroll to the own row stops above the mute button", () => {
-  assert.match(phone, /\.row \{\s*scroll-margin-bottom: 4rem;/);
+  assert.match(phone, /\.row \{\s*scroll-margin-bottom: calc\(4rem \+ env\(safe-area-inset-bottom, 0px\)\);/);
 });
 
 test("AC-7: legal own stacks are buttons, others fade, focus shows the gold outline, the scroll is nearest", () => {
