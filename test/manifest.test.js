@@ -80,7 +80,7 @@ test("AC-5: main and the mute button keep clear of the safe-area insets", () => 
 test("AC-6: the workflow copies the manifest, and cache-bust passes and keeps its links unversioned", () => {
   assert.match(read(".github/workflows/pages.yml"), /cp -r [^\n]*\bmanifest\.webmanifest\b[^\n]*_site\//);
   const site = mkdtempSync(join(tmpdir(), "site-"));
-  for (const p of ["index.html", "manifest.webmanifest", "assets/icons", "src"]) cpSync(join(root, p), join(site, p), { recursive: true });
+  for (const p of ["index.html", "manifest.webmanifest", "sw.js", "assets/icons", "assets/sounds", "src"]) cpSync(join(root, p), join(site, p), { recursive: true });
   const r = spawnSync("node", [join(root, "scripts/cache-bust.js"), site, "abc123"], { encoding: "utf8" });
   assert.equal(r.status, 0, r.stderr);
   const out = readFileSync(join(site, "index.html"), "utf8");

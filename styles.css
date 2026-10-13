@@ -774,7 +774,7 @@ h1 {
 
   /* The scroll to the own row stops above the fixed mute button. */
   .row {
-    scroll-margin-bottom: 4rem;
+    scroll-margin-bottom: calc(4rem + env(safe-area-inset-bottom, 0px));
   }
 
   /* The opponent cards overlap like a fan. Each card shows its corner index, at a readable size. */

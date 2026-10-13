@@ -294,4 +294,13 @@ export function startApp({
   cleared = true;
 }
 
-if (typeof document !== "undefined") startApp();
+// Only https and localhost allow a service worker. A failed registration leaves the app online-only.
+export function registerServiceWorker({ navigator = globalThis.navigator, isSecureContext = globalThis.isSecureContext } = {}) {
+  if (!navigator?.serviceWorker || !isSecureContext) return;
+  navigator.serviceWorker.register("sw.js").catch(() => {});
+}
+
+if (typeof document !== "undefined") {
+  startApp();
+  registerServiceWorker();
+}
