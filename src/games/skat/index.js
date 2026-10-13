@@ -125,7 +125,7 @@ function renderPile(view, seat, names) {
   const won = view.tricks.filter((t) => t.winner === seat).length;
   const backs = Array.from({ length: won }, (_, i) => `<span class="card-back" style="--i: ${i}"></span>`).join("");
   return `<div class="pile" data-player="${seat}" role="img" aria-label="${names[seat]}: ${won} ${won === 1 ? "Stich" : "Stiche"}">` +
-    `<span class="pile__slot">${backs}</span><span class="pile__count">${won}</span></div>`;
+    `<span class="pile__slot">${backs}</span><span class="pile__count">${won}</span>${rules.isOver(view) ? `<span class="pile__label">Stiche</span>` : ""}</div>`;
 }
 
 function renderHead(view, seat, names) {
@@ -173,7 +173,8 @@ function renderSkat(view, active) {
   const takeback = active && view.phase === "discard";
   const cards = view.skat.map((card) => `<li class="stack">${!card ? renderCardBack()
     : takeback ? cardButton(card, { type: "takeback", card }, "zurücknehmen") : renderCard(card)}</li>`).join("");
-  return `<div class="skat-skat">` +
+  const label = rules.isOver(view) ? `<span class="skat-skat__label">Skat</span>` : "";
+  return `<div class="skat-skat">${label}` +
     `<ul class="row skat-skat__cards" data-player="skat" aria-label="Skat: ${view.skat.length} Karten">${cards}</ul></div>`;
 }
 
@@ -193,10 +194,12 @@ function gameButtons(hand) {
     `<button type="button" class="announce-button announce-button--${type}" ${moveAttr({ type: "declare", game: type })}${hand ? " data-level" : ""}>` +
     `${symbol(type)}${GAME_NAMES[type]}</button>`).join("");
   const nulls = button("Null", { type: "declare", game: "null" }) + button("Null Ouvert", { type: "declare", game: "null", ouvert: true });
-  const levels = !hand ? "" : `<fieldset class="skat-levels"><legend>Ansage</legend>` +
+  if (!hand) return `<div class="announce__buttons" role="group" aria-label="Spiel ansagen">${suits}${nulls}</div>`;
+  // One tap starts a Hand game, so the visible legend says so.
+  return `<fieldset class="skat-levels"><legend>Handspiel ansagen (ohne Skat)</legend>` +
+    `<div class="announce__buttons">${suits}${nulls}</div>` +
     [["", "keine"], ["schneider", "Schneider"], ["schwarz", "Schwarz"], ["ouvert", "Ouvert"]].map(([value, label]) =>
       `<label><input type="radio" name="ansage" value="${value}"${value ? "" : " checked"}> ${label}</label>`).join("") + `</fieldset>`;
-  return `<div class="announce__buttons" role="group" aria-label="${hand ? "Hand spielen" : "Spiel ansagen"}">${suits}${nulls}</div>${levels}`;
 }
 
 function renderStatus(view, names, active) {
@@ -247,6 +250,16 @@ function renderScores(view, names) {
     `<tbody>${rows}</tbody><tfoot><tr><th scope="row">Summe</th>${rules.totals(view.scores).map(cell).join("")}</tr></tfoot></table></div>`;
 }
 
+// The parts of the game value, for example "mit 1, Spiel 2: 2 × 12 = 24".
+function valueText(view, res) {
+  const bid = view.bid.value;
+  const parts = view.game.type === "null" ? `${gameName(view.game)}: ${res.base}`
+    : [`${res.mit ? "mit" : "ohne"} ${res.spitzen}`, ...["Spiel", ...res.levels].map((label, i) => `${label} ${res.spitzen + 1 + i}`)].join(", ") +
+      `: ${res.spitzen + 1 + res.levels.length} × ${res.base} = ${(res.spitzen + 1 + res.levels.length) * res.base}`;
+  const over = res.overbid ? `. Gereizt ${bid}: ${res.value / res.base} × ${res.base} = ${res.value}` : "";
+  return `${parts}${over}${res.won ? "" : `. Verloren zählt doppelt: -${2 * res.value}`}`;
+}
+
 // Only the host starts the next online game.
 function renderResult(view, names, isOnline, left) {
   const next = left ? "" : isOnline === "guest"
@@ -262,7 +275,8 @@ function renderResult(view, names, isOnline, left) {
     const detail = view.game.type === "null" ? (res.won ? "ohne Stich" : "mit Stich") : `${res.points} Augen`;
     head = `<p class="result__outcome result__outcome--${outcome}" id="result-outcome">${OUTCOMES[outcome]}</p>` +
       `<p class="result__points" id="result-points">${names[view.declarer]}: ${gameName(view.game)}, ${detail}, ` +
-      `${res.won ? "gewonnen" : "verloren"}${res.overbid ? " (überreizt)" : ""}: ${res.score > 0 ? "+" : ""}${res.score}</p>`;
+      `${res.won ? "gewonnen" : "verloren"}${res.overbid ? " (überreizt)" : ""}: ${res.score > 0 ? "+" : ""}${res.score}</p>` +
+      `<p class="result__value">${valueText(view, res)}</p>`;
   }
   return `<section class="result" aria-label="Ergebnis">${head}${next}${renderScores(view, names)}</section>`;
 }

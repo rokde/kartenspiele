@@ -33,6 +33,16 @@ test("AC-6: a Skat game in play restores from karten:skat", () => {
   assert.ok(renderGameScreen(skat, restored).includes("Skat"));
 });
 
+test("AC-6: a finished Skat game restores with its score row once", () => {
+  const over = until(all(skat.newGame(3, 0, [{ declarer: 1, game: { type: "grand", hand: false, schneider: false, schwarz: false, ouvert: false }, value: 48 }])), skat.isOver);
+  assert.equal(over.phase, "over");
+  const store = memory();
+  save(store, "skat", over);
+  const restored = skat.restore(load(store, "skat"));
+  assert.deepEqual(restored.scores, over.scores);
+  assert.equal(skat.restore({ ...over, scores: over.scores.slice(0, 1) }), null);
+});
+
 test("AC-6: soundEvents give deal, play per card, and win or lose for seat 0", () => {
   const start = all(skat.newGame(3));
   assert.deepEqual(skat.soundEvents(null, start), ["deal"]);
@@ -56,4 +66,21 @@ test("AC-6: motionEvents give the deal steps, then play and trick events", () =>
   const playing = until(start, (s) => s.phase === "play" && s.trick.length === 2);
   const events = skat.motionEvents(playing, step(playing));
   assert.deepEqual(events.map((e) => e.type), ["play", "trick"]);
+});
+
+test("UX: the Skat phase labels the one-tap game buttons as a Hand game", () => {
+  // Dealer 2: seats 1 and 2 pass, then Vorhand 0 plays for 18.
+  const skatPhase = [{ type: "pass" }, { type: "pass" }, { type: "bid", value: 18 }]
+    .reduce((s, m) => skat.applyMove(s, m), skat.newGame(4, 2));
+  assert.equal(skatPhase.phase, "skat");
+  assert.equal(skatPhase.declarer, 0);
+  assert.match(skat.render(skatPhase), /<legend>Handspiel ansagen \(ohne Skat\)<\/legend><div class="announce__buttons">.*data-level/);
+});
+
+test("UX: the result shows the parts of the game value, the Skat label and the Stiche label", () => {
+  const over = until(all(skat.newGame(3)), skat.isOver);
+  const html = skat.render(over);
+  if (over.phase === "over" && over.game.type !== "null") assert.match(html, /class="result__value">(mit|ohne) \d+, Spiel \d+.*: \d+ × \d+ = \d+/);
+  assert.match(html, /<span class="skat-skat__label">Skat<\/span>/);
+  assert.match(html, /<span class="pile__label">Stiche<\/span>/);
 });

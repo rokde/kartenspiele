@@ -915,6 +915,25 @@ h1 {
   font-weight: 700;
 }
 
+.skat-levels .announce__buttons {
+  flex-basis: 100%;
+}
+
+.skat .pile__label,
+.skat-skat__label,
+.result__value {
+  font-size: 0.75rem;
+  color: var(--brown);
+}
+
+.skat .result__points {
+  margin-bottom: 0;
+}
+
+.result__value {
+  margin: 0 0 0.5rem;
+}
+
 .skat-levels label {
   display: flex;
   align-items: center;
