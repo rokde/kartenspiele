@@ -32,6 +32,8 @@ jobs:
           mkdir _site
           cp -r index.html styles.css src assets vendor _site/
           touch _site/.nojekyll
+      - name: Add cache-busting version
+        run: node scripts/cache-bust.js _site "${{ github.sha }}"
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
       - id: deployment
