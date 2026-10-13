@@ -785,3 +785,193 @@ h1 {
     transform: none;
   }
 }
+
+/* Skat: two opponents at the top, the trick and the Skat in the middle, the own hand at the bottom. */
+.skat {
+  --trick-w: 3.25rem;
+}
+
+.skat__others {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+
+.seat__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.15rem 0.5rem;
+  margin: 0.25rem 0;
+}
+
+.seat__role {
+  font-size: 0.85rem;
+  color: var(--brown);
+}
+
+.seat__said {
+  padding: 0 0.5rem;
+  font-weight: 700;
+  background: var(--card-bg);
+  border: 2px solid var(--brown);
+  border-radius: 999px;
+}
+
+.skat .stack {
+  aspect-ratio: auto;
+}
+
+.skat .stack .card-back:first-child {
+  margin-top: 0;
+}
+
+/* The hidden hand of an opponent is a fan of overlapping backs. */
+.skat-hand--other {
+  display: flex;
+  gap: 0;
+  justify-content: center;
+  min-height: calc(2rem * 334 / 240);
+}
+
+.skat-hand--other .stack {
+  width: 2rem;
+  flex: none;
+}
+
+.skat-hand--other .stack + .stack {
+  margin-left: -1.3rem;
+}
+
+.skat__center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  margin-top: 0.25rem;
+}
+
+.skat-info {
+  margin: 0;
+  font-weight: 700;
+}
+
+.skat__middle {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.skat .trick {
+  min-width: calc(3 * var(--trick-w) + 2.5rem);
+  min-height: calc(var(--trick-w) * 334 / 240 + 1.5rem);
+}
+
+.skat .trick__cards {
+  gap: 1.25rem;
+}
+
+.skat-skat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.85rem;
+}
+
+.skat .skat-skat__cards {
+  display: flex;
+  gap: 0.25rem;
+  min-height: calc(var(--trick-w) * 334 / 240);
+}
+
+.skat-skat__cards .stack {
+  width: var(--trick-w);
+}
+
+.skat__actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  min-height: 3rem;
+}
+
+.skat-levels {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.25rem 0.6rem;
+  margin: 0;
+  padding: 0 0.5rem 0.25rem;
+  font-size: 0.875rem;
+  border: 2px solid var(--brown);
+  border-radius: 1rem;
+}
+
+.skat-levels legend {
+  font-weight: 700;
+}
+
+.skat-levels label {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  min-height: 2rem;
+}
+
+/* The own hand: 2 lines of 6 on a phone, so the cards stay big. */
+.skat-hand--own {
+  --cols: 6;
+  --w: min(4.5rem, (100vw - 1rem - 5 * var(--gap)) / 6);
+}
+
+.skat .result {
+  margin-top: 0.5rem;
+}
+
+.skat-scores {
+  max-height: 9rem;
+  overflow: auto;
+}
+
+.skat-scores table {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+
+.skat-scores th,
+.skat-scores td {
+  padding: 0.1rem 0.35rem;
+  text-align: right;
+}
+
+.skat-scores th[scope="row"] {
+  text-align: left;
+  font-weight: 400;
+}
+
+.skat-scores tfoot {
+  font-weight: 700;
+  border-top: 2px solid var(--brown);
+}
+
+/* Wide: the own hand is one line. The card width comes from the viewport height. */
+@media (width >= 48rem) {
+  .skat {
+    --trick-w: 4rem;
+  }
+
+  .skat-hand--own {
+    --cols: var(--n);
+    --w: min(5.5rem, (58rem - 11 * var(--gap)) / 12, (100vh - 33rem) * 240 / 334);
+  }
+}
+
+.skat .trick__player {
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
