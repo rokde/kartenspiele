@@ -23,7 +23,7 @@ main {
   max-width: 60rem;
   margin: 0 auto;
   /* Room at the bottom, so that the fixed mute button does not cover content. */
-  padding: 1rem 1rem 4.5rem;
+  padding: 1rem max(1rem, env(safe-area-inset-right, 0px)) calc(4.5rem + env(safe-area-inset-bottom, 0px)) max(1rem, env(safe-area-inset-left, 0px));
 }
 
 h1 {
@@ -229,8 +229,8 @@ h1 {
 
 .mute-button {
   position: fixed;
-  right: 0.75rem;
-  bottom: 0.75rem;
+  right: calc(0.75rem + env(safe-area-inset-right, 0px));
+  bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
   z-index: 10;
   display: flex;
   align-items: center;
@@ -328,7 +328,7 @@ h1 {
 @media (width >= 48rem) {
   /* The mute button is beside the table, not below it. */
   main {
-    padding-bottom: 1rem;
+    padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
   }
 
   .table {
@@ -736,7 +736,7 @@ h1 {
 /* Phone: a compact top, so the whole table fits above the fixed mute button. */
 @media (width < 48rem) {
   main {
-    padding: 0.5rem 0.5rem 3.75rem;
+    padding: 0.5rem max(0.5rem, env(safe-area-inset-right, 0px)) calc(3.75rem + env(safe-area-inset-bottom, 0px)) max(0.5rem, env(safe-area-inset-left, 0px));
   }
 
   .screen-bar {

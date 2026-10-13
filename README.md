@@ -18,6 +18,10 @@ Then open `http://localhost:8000/`.
 node --test
 ```
 
+## App icons
+
+Render each PNG in `assets/icons/` once from its SVG (`icon.svg`, or `icon-maskable.svg` for `icon-maskable-512.png`): serve the repo, then run `playwright-cli open <svg url>`, `resize <size> <size>` and `screenshot --filename=assets/icons/<name>.png`.
+
 ## Credits
 
 - Card faces: [CardMeister](https://cardmeister.github.io/) `<playing-card>` web component.
