@@ -67,3 +67,6 @@ Design decision (coordinator, user asked "designen"): split by screen. Wide scre
 ## Feedback 9 (2026-10-13, via /factory:run)
 "kannst du das Spiel immer auf dem Spielauswahl screen starten? und die Regeln-Buttons sollten zum Spiel stehen. Also eine Zeile auf dem Spielauswahlscreen mit Offiziersskat, Zu zweit spiele, Regeln und darunter dann Skat, Online spielen und Regeln. Darunter dann credits"
 Coordinator split (user prefers small jobs): S25 start on the menu, S26 one menu row per game.
+
+## Feedback 10 (2026-10-13, via /factory:run)
+"wir brauchen noch einen cache-buster für die assets. irgendwie ist es gerade mit gecachten js files besonders schwer. css und js sollten cachebuster haben"
