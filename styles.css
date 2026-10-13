@@ -96,6 +96,14 @@ h1 {
   font-size: 1.25rem;
 }
 
+@media (max-width: 36rem) {
+  .menu__row { width: 100%; }
+  .menu__row .game-button:not(.game-button--duo) { flex: 1 1 100%; }
+  .menu__row .game-button--duo,
+  .menu__row .back-button { flex: 1 1 0; padding-inline: 0.75rem; }
+  .menu__row .game-button--duo { flex-grow: 2; }
+}
+
 .game-button,
 .back-button {
   font: inherit;
