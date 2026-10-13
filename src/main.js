@@ -186,6 +186,8 @@ export function startApp({
   app.addEventListener("click", (event) => {
     const button = event.target.closest("button");
     if (!button) return;
+    // The game must not go on behind the question.
+    if (confirming && !["new-confirm", "new-cancel", "back", "rules"].includes(button.dataset.action)) return;
     if (button.dataset.action === "back" && rulesFromGame) {
       rulesFromGame = false;
       showGame();

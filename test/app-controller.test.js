@@ -303,6 +303,23 @@ test("S22: Neues Spiel asks first, stops the computer, and Abbrechen changes not
   assert.equal(t.clock.pending(800), 1, "the game goes on");
 });
 
+test("S22 round 1: card and announce clicks do nothing while the question shows", async () => {
+  const t = setup();
+  await t.click('data-game-id="offiziersskat"');
+  await t.click('data-action="new"');
+  const before = t.storage.getItem(KEY);
+  await t.click("data-announce=");
+  assert.equal(t.storage.getItem(KEY), before);
+  await t.click('data-action="new-cancel"');
+  await t.click("data-announce=");
+  await t.click('data-action="new"');
+  const played = t.storage.getItem(KEY);
+  await t.click("data-stack=");
+  assert.equal(t.storage.getItem(KEY), played);
+  assert.equal(t.clock.timers.size, 0, "no computer turn starts");
+  assert.match(t.app.innerHTML, /role="alertdialog"/);
+});
+
 test("S22: Neues Spiel starten saves a new game with an empty score list", async () => {
   const scores = [{ human: 70, computer: 50 }];
   const storage = memoryStorage();
