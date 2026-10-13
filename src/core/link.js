@@ -9,13 +9,14 @@ const loadPeerJs = () => new Promise((resolve, reject) => {
   document.head.append(script);
 });
 
-const wrap = (peer, conn) => ({
+// `end` runs after the close. The first link ends the peer, so a close of it also ends all other links.
+const wrap = (conn, end) => ({
   send: (data) => conn.send(data),
   onMessage: (fn) => conn.on("data", fn),
   onClose: (fn) => conn.on("close", fn),
   close: () => {
     conn.close();
-    peer.destroy();
+    end();
   },
 });
 
@@ -28,7 +29,8 @@ export function createLinks(load = loadPeerJs) {
   }));
 
   // The Promise resolves with the first open data channel. An abort destroys the peer.
-  const connect = async (id, signal, start) => {
+  // With `more`, each later data channel goes to `more`. Without it, the peer closes later channels.
+  const connect = async (id, signal, start, more) => {
     const PeerClass = await Peer();
     signal?.throwIfAborted();
     return new Promise((resolve, reject) => {
@@ -42,16 +44,18 @@ export function createLinks(load = loadPeerJs) {
       };
       signal?.addEventListener("abort", () => fail(signal.reason));
       peer.on("error", fail);
+      let linked = false;
       start(peer, (conn) => conn.on("open", () => {
+        if (linked && more) return more(wrap(conn, () => {}));
         if (settled) return conn.close();
-        settled = true;
-        resolve(wrap(peer, conn));
+        settled = linked = true;
+        resolve(wrap(conn, () => peer.destroy()));
       }));
     });
   };
 
   return {
-    host: (code, signal) => connect(peerId(code), signal, (peer, ready) => peer.on("connection", ready)),
+    host: (code, signal, more) => connect(peerId(code), signal, (peer, ready) => peer.on("connection", ready), more),
     join: (code, signal) => connect(null, signal, (peer, ready) =>
       peer.on("open", () => ready(peer.connect(peerId(code), { reliable: true })))),
   };
