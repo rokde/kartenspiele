@@ -94,7 +94,7 @@ export function spitzen(cards, type) {
   return n;
 }
 
-// The result of a finished game by ISkO. The Skat counts for the declarer.
+// The result of a finished game by ISkO. The Skat counts for the declarer: for the Augen and for the Spitzen, also in a Hand game.
 export function result(state) {
   const { game, declarer, tricks, skat } = state;
   const bid = state.bid.value;
@@ -103,6 +103,9 @@ export function result(state) {
   let won;
   let value = base;
   let points = 0;
+  let spitzenCount = 0;
+  let mit = false;
+  let levels = [];
   if (game.type === "null") {
     won = own.length === 0;
   } else {
@@ -110,15 +113,18 @@ export function result(state) {
     const cards = [...tricks.flatMap((t) => t.cards.filter((p) => p.seat === declarer).map((p) => p.card)), ...skat];
     const schneider = points >= 90 || points <= 30 || game.schneider;
     const schwarz = own.length === 0 || own.length === 10 || game.schwarz;
-    const levels = [game.hand, schneider, game.schneider, schwarz, game.schwarz, game.ouvert].filter(Boolean).length;
-    value = (spitzen(cards, game.type) + 1 + levels) * base;
+    levels = [[game.hand, "Hand"], [schneider, "Schneider"], [game.schneider, "Schneider angesagt"], [schwarz, "Schwarz"],
+      [game.schwarz, "Schwarz angesagt"], [game.ouvert, "Ouvert"]].filter(([on]) => on).map(([, label]) => label);
+    spitzenCount = spitzen(cards, game.type);
+    mit = cards.some((c) => c.suit === "kreuz" && c.rank === "B");
+    value = (spitzenCount + 1 + levels.length) * base;
     won = points >= 61 && (!game.schneider || points >= 90) && (!game.schwarz || own.length === 10);
   }
   // Überreizt: the game is lost with the smallest multiple of the base value that reaches the bid.
   const overbid = value < bid;
   if (overbid) value = Math.ceil(bid / base) * base;
   won = won && !overbid;
-  return { won, value, score: won ? value : -2 * value, points, overbid };
+  return { won, value, score: won ? value : -2 * value, points, overbid, base, spitzen: spitzenCount, mit, levels };
 }
 
 const isCard = (value) => SUITS.includes(value?.suit) && RANKS.includes(value.rank);
@@ -161,7 +167,8 @@ function bid(state, move) {
   const { bid: b, turn: seat } = state;
   const said = [...state.said];
   if (move.type === "bid") {
-    if (seat !== b.sayer || move.value <= b.value) throw new Error("Illegal bid");
+    // In round 3 nobody bid, so the last seat can only play for 18.
+    if (seat !== b.sayer || move.value <= b.value || (b.hearer === null && move.value !== 18)) throw new Error("Illegal bid");
     said[seat] = String(move.value);
     const next = { ...state, said, bid: { ...b, value: move.value } };
     return b.hearer === null ? toDeclarer(next, seat) : { ...next, turn: b.hearer };
@@ -260,7 +267,10 @@ export function restore(data) {
     const scores = data.scores.map(checkScore);
     if (!Number.isInteger(data.seed) || !isSeat(data.dealer) || scores.includes(null) || !Array.isArray(data.log) ||
       !Array.isArray(computers) || !computers.every(isSeat) || new Set(computers).size !== computers.length) return null;
-    return data.log.reduce((state, move) => applyMove(state, move), newGame(data.seed, data.dealer, scores, [...computers]));
+    // A finished game already has its own row in the saved scores. The replay adds it again.
+    const over = data.phase === "over";
+    const state = data.log.reduce((s, move) => applyMove(s, move), newGame(data.seed, data.dealer, over ? scores.slice(0, -1) : scores, [...computers]));
+    return !over || (state.phase === "over" && JSON.stringify(state.scores.at(-1)) === JSON.stringify(scores.at(-1))) ? state : null;
   } catch {
     return null;
   }

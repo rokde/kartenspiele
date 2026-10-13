@@ -98,6 +98,20 @@ test("AC-5: a move out of turn, an illegal move or a malformed message changes n
   assert.equal(ctx.changes.length, 1);
 });
 
+test("AC-5: in round 3 the host takes only 18 from a guest", () => {
+  const ctx = setup(7, 2);
+  const [[, link1], [, link2]] = ctx.pairs;
+  link2.send({ type: "move", move: { type: "pass" } });
+  ctx.host.move({ type: "pass" });
+  assert.deepEqual([ctx.state().bid.round, ctx.state().turn], [3, 1]);
+  const before = ctx.changes.length;
+  link1.send({ type: "move", move: { type: "bid", value: 216 } });
+  assert.equal(ctx.changes.length, before);
+  link1.send({ type: "move", move: { type: "bid", value: 18 } });
+  assert.equal(ctx.state().phase, "skat");
+  assert.equal(ctx.state().bid.value, 18);
+});
+
 test("AC-5: only the host starts Nächstes Spiel", () => {
   const ctx = setup(3, 1);
   playGame(ctx);

@@ -49,3 +49,17 @@ test("AC-4: a hand with no Bube, no Ass and no Zehn passes at 18", () => {
   assert.deepEqual(aiMove({ ...heard, hands: heard.hands.map((h, s) => (s === heard.turn ? WEAK : h)) }), { type: "pass" });
   assert.equal(handValue(WEAK), 0);
 });
+
+test("AC-4: the computer keeps one game type through both discards", () => {
+  for (let seed = 1; seed <= 50; seed++) {
+    let state = newGame(seed, 0, [], [0, 1, 2]);
+    while (!isOver(state) && state.phase !== "discard") state = applyMove(state, aiMove(state));
+    if (state.phase !== "discard") continue;
+    const twice = applyMove(applyMove(state, aiMove(state)), aiMove(applyMove(state, aiMove(state))));
+    const declared = aiMove(twice).game;
+    // The type comes from the 12 cards only. Any 2 cards in the Skat give the same type.
+    const cards = [...state.hands[state.declarer]];
+    const other = { ...twice, hands: twice.hands.map((h, s) => (s === state.declarer ? cards.slice(2) : h)), skat: cards.slice(0, 2) };
+    assert.equal(aiMove(other).game, declared, `seed ${seed}`);
+  }
+});

@@ -81,6 +81,12 @@ test("AC-1: an illegal bid or a move out of turn throws and changes nothing", ()
   assertRejected(bid, { type: "bid", value: 18 });
   assertRejected(bid, { type: "bid", value: 20 });
   assertRejected(bid, { type: "yes" });
+  // Round 3: nobody bid, so the last seat can play only for 18.
+  const last = play(state, [{ type: "pass" }, { type: "pass" }]);
+  assert.equal(last.bid.round, 3);
+  assertRejected(last, { type: "bid", value: 216 });
+  assertRejected(last, { type: "bid", value: 20 });
+  assert.equal(applyMove(last, { type: "bid", value: 18 }).bid.value, 18);
 });
 
 test("AC-1: when all 3 seats pass, no score row and the next seat deals", () => {
@@ -177,6 +183,10 @@ function finished(game, hand, skat, wins, first = "", bid = 18) {
 
 const KARO = "karo A, karo 10, kreuz B, karo K, karo D, karo 9, karo 8, karo 7, herz 7, herz 8";
 const KARO_90 = "karo 10, karo A, kreuz B, karo K, karo D, karo 9, karo 8, karo 7, herz 7, herz 8";
+const NULL = "kreuz 7, kreuz 8, kreuz 9, kreuz 10, pik 7, pik 8, pik 9, herz 7, herz 8, herz 9";
+const KREUZ_ALL = "kreuz B, kreuz A, kreuz 10, kreuz K, kreuz D, kreuz 9, kreuz 8, kreuz 7, herz A, herz 10";
+const HAND = { hand: true, schneider: true };
+const SCHWARZ = { hand: true, schneider: true, schwarz: true };
 
 const TABLE = [
   ["Kreuz mit 2 won", finished({ type: "kreuz" }, "kreuz A, kreuz 10, kreuz B, pik B, kreuz K, kreuz D, kreuz 9, kreuz 8, kreuz 7, herz 7",
@@ -197,6 +207,22 @@ const TABLE = [
   ["89 points is no Schneider", finished({ type: "karo" }, KARO_90, "herz 9, pik 7", "0111111111", "herz 10, herz A"), 18, 89],
   ["30 points is Schneider for the opponents", finished({ type: "karo" }, KARO, "herz 9, pik 7", "1110000000", "pik K, pik D, kreuz 9, kreuz 8, kreuz 7, pik 9"), -54, 30],
   ["31 points is no Schneider", finished({ type: "karo" }, KARO, "herz 9, pik 7", "1110000000", "pik K, herz B, pik B, kreuz 9, kreuz 8, kreuz 7"), -36, 31],
+  ["Null won at bid 23", finished({ type: "null" }, NULL, "karo 7, karo 8", "0000000000", "", 23), 23, 0],
+  ["Null lost", finished({ type: "null" }, NULL, "karo 7, karo 8", "1000000000"), -46, 0],
+  ["Null Hand lost", finished({ type: "null", hand: true }, NULL, "karo 7, karo 8", "1000000000"), -70, 0],
+  ["überreizt: bid 24, Null won", finished({ type: "null" }, NULL, "karo 7, karo 8", "0000000000", "", 24), -92, 0],
+  ["überreizt: bid 36, Null Hand won", finished({ type: "null", hand: true }, NULL, "karo 7, karo 8", "0000000000", "", 36), -140, 0],
+  ["Kreuz mit 2 Schwarz won", finished({ type: "kreuz" }, "kreuz B, pik B, kreuz A, kreuz 10, kreuz K, kreuz D, kreuz 9, kreuz 8, kreuz 7, herz 7",
+    "herz 8, herz 9", "1111111111"), 60, 120],
+  ["Karo mit 1, the opponents make the declarer Schwarz", finished({ type: "karo" }, KARO, "herz 9, pik 7", "0000000000"), -72, 0],
+  ["Karo mit 1 Hand Schneider angesagt won with 90", finished({ type: "karo", ...HAND }, KARO_90, "herz 9, pik 7", "0111111111", "herz 10, pik 10"), 45, 90],
+  ["Karo mit 1 Hand Schneider angesagt lost with 89", finished({ type: "karo", ...HAND }, KARO_90, "herz 9, pik 7", "0111111111", "herz 10, herz A"), -90, 89],
+  ["Karo mit 1 Hand Schwarz angesagt lost with 9 tricks", finished({ type: "karo", ...SCHWARZ }, KARO_90, "herz 9, pik 7", "0111111111", "herz 10, pik 10"), -126, 90],
+  ["Kreuz mit 1 Hand Ouvert won", finished({ type: "kreuz", ...SCHWARZ, ouvert: true }, KREUZ_ALL, "herz 7, herz 8", "1111111111"), 96, 120],
+  // ISkO: the Skat counts for the Spitzen, also in a Hand game. Without the Skat this hand is "ohne 4" (72).
+  ["Kreuz Hand with the Kreuz-Bube in the Skat is mit 1", finished({ type: "kreuz", hand: true },
+    "kreuz A, kreuz 10, kreuz K, kreuz D, kreuz 9, kreuz 8, kreuz 7, herz A, herz 10, pik A", "kreuz B, herz 7", "1111100000",
+    "pik 10, herz K, pik K, pik D, herz D, karo K, karo 10, karo 9, pik 9, pik 8"), 36, 68],
   ["überreizt: bid 24, Karo mit 1 won", finished({ type: "karo" }, KARO, "herz 9, pik 7", "1110000000", "herz A, herz 10, pik A, pik D, kreuz D, kreuz 9", 24), -54, 61],
 ];
 
@@ -207,6 +233,14 @@ for (const [name, state, score, points] of TABLE) {
     assert.equal(res.score, score);
   });
 }
+
+test("AC-3: result gives the parts of the game value", () => {
+  const ouvert = result(TABLE.find(([name]) => name === "Kreuz mit 1 Hand Ouvert won")[1]);
+  assert.deepEqual([ouvert.spitzen, ouvert.mit, ouvert.base], [1, true, 12]);
+  assert.deepEqual(ouvert.levels, ["Hand", "Schneider", "Schneider angesagt", "Schwarz", "Schwarz angesagt", "Ouvert"]);
+  const ohne = result(TABLE.find(([name]) => name.startsWith("Grand ohne 1"))[1]);
+  assert.deepEqual([ohne.spitzen, ohne.mit, ohne.levels], [1, false, ["Hand"]]);
+});
 
 test("AC-3: each finished game adds one score row, with the value for the declarer and 0 for the others", () => {
   let state = newGame(8, 0);
