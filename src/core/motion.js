@@ -61,7 +61,8 @@ export function createMotion({
     winner = null;
     const from = new Map();
     for (const event of events) {
-      const element = event.type === "play" && view.card(event.card);
+      // A hidden card flies from a back in the hand of its player.
+      const element = event.type === "play" && (view.card(event.card) ?? view.hand?.(event.player));
       if (element) from.set(event, view.rect(element));
     }
     view.render();
@@ -114,6 +115,7 @@ export function domView(root, render, onClear) {
     rect,
     card: (card) => root.querySelector(`.card[aria-label="${cardName(card)}"]`),
     deck: () => root.querySelector(".deal-stack"),
+    hand: (player) => root.querySelector(`.row[data-player="${player}"] .stack--hidden`),
     pile: (player) => root.querySelector(`.pile[data-player="${player}"] .card-back:last-child`) ??
       root.querySelector(`.pile[data-player="${player}"] .pile__slot`),
     dealt: ({ player, side, stacks }) => stacks

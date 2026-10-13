@@ -2,13 +2,19 @@ import { renderCard, renderCardBack } from "../../core/card-view.js";
 import { SUIT_NAMES, SUIT_SYMBOLS, cardName } from "../../core/cards.js";
 import * as rules from "./rules.js";
 import { aiMove } from "./ai.js";
+import * as session from "./online.js";
 
 export { applyMove, isOver, restore } from "./rules.js";
+export { guestSession } from "./online.js";
 export { aiMove };
 
 export const id = "offiziersskat";
 export const name = "Offiziersskat";
 export const online = true;
+
+// Online the host is "human" and deals the first game. The game has one guest.
+export const newOnlineGame = (seed) => rules.newGame(seed, "human");
+export const hostSession = ([link], state, onChange) => session.hostSession(link, state, onChange);
 
 // Keep this text in line with rules.js.
 export const rulesHtml = `<h1>Spielregeln Offiziersskat</h1>

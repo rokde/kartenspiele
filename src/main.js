@@ -5,8 +5,6 @@ import { makeRoomCode, normalizeRoomCode } from "./core/room-code.js";
 import { save, load, isSaveOf } from "./core/storage.js";
 import { createSound, timeSounds } from "./core/sound.js";
 import { createMotion, domView } from "./core/motion.js";
-import { hostSession, guestSession } from "./games/offiziersskat/online.js";
-import { newGame as newOnlineGame } from "./games/offiziersskat/rules.js";
 
 export const APP_TITLE = "Karten";
 export const JOIN_TIMEOUT = 15000;
@@ -24,7 +22,8 @@ export function startApp({
   reducedMotion = matchMedia("(prefers-reduced-motion: reduce)").matches,
   seed = () => crypto.getRandomValues(new Uint32Array(1))[0],
   // link.js loads PeerJS only when a player opens or joins a room.
-  connect = (role, code, signal) => (role === "host" ? hostLink : joinLink)(code, signal),
+  // The host gives each later guest to `more`.
+  connect = (role, code, signal, more) => (role === "host" ? hostLink(code, signal, more) : joinLink(code, signal)),
   clipboard = globalThis.navigator?.clipboard,
 } = {}) {
   const app = document.getElementById("app");
@@ -73,14 +72,18 @@ export function startApp({
     // The first button is at the top. Its focus must not scroll the page away from the table.
     show(html, { preventScroll: true });
     if (confirming) return app.querySelector("[data-action=new-cancel]")?.focus({ preventScroll: true });
-    (app.querySelector("[data-announce], [data-stack], [data-action=next]") ?? app.querySelector(".status"))?.focus({ preventScroll: scroll });
+    (app.querySelector("[data-announce], [data-stack], [data-move], [data-action=next]") ?? app.querySelector(".status"))?.focus({ preventScroll: scroll });
     if (scroll) app.querySelector(".row--playing").scrollIntoView({ block: "nearest", behavior: reducedMotion ? "auto" : "smooth" });
   };
   // A short pause, so that the human can see each computer card.
+  // Online, the host runs the computer seats of a game with `computerTurn`.
   const computerTurn = () => {
-    if (!online && state.trump !== null && state.turn === "computer" && !game.isOver(state)) {
+    const due = game.computerTurn ? online?.role !== "guest" && !online?.left && game.computerTurn(state)
+      : !online && state.trump !== null && state.turn === "computer" && !game.isOver(state);
+    if (due) {
       timer = setTimeout(() => {
-        go(game.applyMove(state, game.aiMove(state)));
+        if (online) online.session.ai();
+        else go(game.applyMove(state, game.aiMove(state)));
       }, 800);
     }
   };
@@ -105,39 +108,46 @@ export function startApp({
     if (run === runs) computerTurn();
   };
 
-  // The open room: its code, an abort for the wait, and the link when it is open.
+  // The open room: its code, an abort for the wait, and the open links. The first link ends the peer.
   let room = null;
+  const closeLinks = (current) => [...(current?.links ?? [])].reverse().forEach((link) => link.close());
   // Clear the room first: our own close event and late link messages must find no room.
   const leaveRoom = () => {
     const current = room;
     room = null;
     online = null;
     current?.abort.abort();
-    current?.link?.close();
+    closeLinks(current);
   };
-  // The other player left. The game stops, and the screen keeps only the way back to the menu.
+  // Another player left. The game stops for all, and the screen keeps only the way back to the menu.
   const peerLeft = () => {
-    const { link } = room;
+    const current = room;
     leave();
     room = null;
-    online.left = true;
-    link.close();
-    if (state) paint();
+    if (online) online.left = true;
+    closeLinks(current);
+    if (state && online) paint();
     else show(renderLeft());
     app.querySelector(".leave-notice button")?.focus();
   };
+  const guestCount = (current) => `${current.links.length} von ${game.maxGuests} Mitspielern im Raum`;
+  // A later guest joins the room of a game with more than one guest, until the host starts.
+  const addGuest = (current, link) => {
+    if (room !== current || online || !current.links.length || current.links.length >= game.maxGuests) return link.close();
+    current.links.push(link);
+    link.onClose(current.live(peerLeft));
+    roomStatus(guestCount(current));
+  };
   // The host deals the first game. hostSession does not report this start state, so the host renders it here.
-  const startOnline = (role, link, current) => {
+  const startOnline = (role, current) => {
     state = null;
     cleared = true;
-    const live = (fn) => (...args) => { if (room === current) fn(...args); };
-    link.onClose(live(peerLeft));
     if (role === "guest") {
-      online = { role, session: guestSession(link, live(go)) };
+      online = { role, session: game.guestSession(current.links[0], current.live(go)) };
       return;
     }
-    const first = newOnlineGame(seed(), "human");
-    online = { role, session: hostSession(link, first, live(go)) };
+    const first = game.newOnlineGame(seed(), current.links.length);
+    online = { role, session: game.hostSession(current.links, first, current.live(go)) };
     go(first, null);
   };
   const move = (m) => (online ? online.session.move(m) : go(game.applyMove(state, m)));
@@ -145,8 +155,10 @@ export function startApp({
   const roomStatus = (text) => { app.querySelector(".room [role=status]").textContent = text; };
   // The host waits for a person, so only the join has a timeout. The host tries up to 3 new codes.
   const openRoom = async (role, code, retries = 3) => {
-    const current = room = { code, abort: new AbortController() };
+    const current = room = { code, abort: new AbortController(), links: [] };
+    current.live = (fn) => (...args) => { if (room === current) fn(...args); };
     const host = role === "host";
+    const lobby = (game.maxGuests ?? 1) > 1;
     show(renderRoom(code, host ? "Warte auf Mitspieler …" : "Verbinde …", { copy: host }));
     const timeout = host ? null : setTimeout(() => {
       if (room !== current) return;
@@ -155,12 +167,19 @@ export function startApp({
       roomStatus(connectionMessage(error));
     }, JOIN_TIMEOUT);
     try {
-      const link = await connect(role, code, current.abort.signal);
+      const link = await connect(role, code, current.abort.signal, lobby ? (more) => addGuest(current, more) : undefined);
       clearTimeout(timeout);
       if (room !== current || current.abort.signal.aborted) return link.close();
-      current.link = link;
-      roomStatus("Verbunden");
-      startOnline(host ? "host" : "guest", link, current);
+      current.links.unshift(link);
+      link.onClose(current.live(peerLeft));
+      if (host && lobby) {
+        // The host starts when the room has enough players. Free seats get a computer.
+        show(renderRoom(code, guestCount(current), { copy: true, start: true }));
+        app.querySelector("[data-action=start]").focus();
+        return;
+      }
+      roomStatus(lobby ? "Verbunden. Warte auf den Start …" : "Verbunden");
+      startOnline(host ? "host" : "guest", current);
     } catch (error) {
       clearTimeout(timeout);
       if (room !== current) return;
@@ -203,9 +222,11 @@ export function startApp({
       show(renderRules(getGame(button.dataset.rules)));
     } else if (button.dataset.online) {
       game = getGame(button.dataset.online);
-      show(renderRoomChoice());
+      show(renderRoomChoice(game.onlineLabel));
     } else if (button.dataset.action === "host") {
       openRoom("host", makeRoomCode());
+    } else if (button.dataset.action === "start") {
+      if (room?.links.length && !online) startOnline("host", room);
     } else if (button.dataset.action === "join") {
       show(renderJoinForm());
       app.querySelector("#room-code")?.focus();
@@ -249,6 +270,10 @@ export function startApp({
       move({ type: "announce", game: button.dataset.announce });
     } else if (button.dataset.stack) {
       move({ type: "play", stack: Number(button.dataset.stack) });
+    } else if (button.dataset.move) {
+      // A Hand game takes the announcement that the player chose.
+      const level = "level" in button.dataset && app.querySelector("input[name=ansage]:checked")?.value;
+      move({ ...JSON.parse(button.dataset.move), ...(level ? { [level]: true } : {}) });
     }
   });
 

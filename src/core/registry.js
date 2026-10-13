@@ -1,6 +1,7 @@
 import * as offiziersskat from "../games/offiziersskat/index.js";
+import * as skat from "../games/skat/index.js";
 
-const games = [offiziersskat];
+const games = [offiziersskat, skat];
 
 export function listGames() {
   return games;

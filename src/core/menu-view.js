@@ -1,10 +1,10 @@
 export function renderMenu(games) {
   const buttons = games
     .map((game) => `<button type="button" class="game-button" data-game-id="${game.id}">${game.name}</button>` +
-      (game.online ? `<button type="button" class="game-button game-button--duo" data-online="${game.id}">Zu zweit spielen</button>` : ""))
+      (game.online ? `<button type="button" class="game-button game-button--duo" data-online="${game.id}">${game.onlineLabel ?? "Zu zweit spielen"}</button>` : ""))
     .join("");
   const rules = games.filter((game) => game.rulesHtml)
-    .map((game) => `<button type="button" class="back-button" data-rules="${game.id}">Regeln</button>`).join("");
+    .map((game) => `<button type="button" class="back-button" data-rules="${game.id}" aria-label="Regeln ${game.name}" title="Regeln ${game.name}">Regeln</button>`).join("");
   return `<nav class="menu" aria-label="Spiele">${buttons}</nav>` +
     `<p class="menu-extra">${rules}<button type="button" class="back-button" data-action="credits">Credits</button></p>`;
 }
@@ -39,19 +39,21 @@ export function renderCredits() {
 
 const backBar = `<div class="screen-bar"><button type="button" class="back-button" data-action="back">Zurück</button></div>`;
 
-export function renderRoomChoice() {
-  return backBar + `<section class="room"><h2>Zu zweit spielen</h2>` +
+export function renderRoomChoice(title = "Zu zweit spielen") {
+  return backBar + `<section class="room"><h2>${title}</h2>` +
     `<p>Öffne einen Raum und gib den Code deinem Mitspieler. Oder tritt mit seinem Code bei.</p>` +
     `<p class="room__actions"><button type="button" class="game-button" data-action="host">Raum öffnen</button>` +
     `<button type="button" class="game-button" data-action="join">Raum beitreten</button></p></section>`;
 }
 
 // `code` must be a normalized room code. The screen never shows the raw input.
-export function renderRoom(code, status, { copy = false } = {}) {
+// With `start`, the host can start the game before the room is full.
+export function renderRoom(code, status, { copy = false, start = false } = {}) {
   return backBar + `<section class="room"><h2>Raum ${copy ? "geöffnet" : "beitreten"}</h2>` +
     `<p class="room__code">${code}</p>` +
     (copy ? `<p class="room__actions"><button type="button" class="back-button" data-action="copy">Code kopieren</button></p>` : "") +
-    `<p class="status" role="status">${status}</p></section>`;
+    `<p class="status" role="status">${status}</p>` +
+    (start ? `<p class="room__actions"><button type="button" class="game-button" data-action="start">Spiel starten</button></p>` : "") + `</section>`;
 }
 
 export function renderJoinForm() {
@@ -65,7 +67,7 @@ export function renderJoinForm() {
 export function renderRules(game) {
   return `<div class="screen-bar"><button type="button" class="back-button" data-action="back">Zurück</button></div>` +
     `<section class="credits rules">${game.rulesHtml}` +
-    `<p>Quelle: ${link("https://de.wikipedia.org/wiki/Offiziersskat", "Offiziersskat bei Wikipedia")}</p></section>`;
+    `<p>Quelle: ${link(...(game.source ?? ["https://de.wikipedia.org/wiki/Offiziersskat", "Offiziersskat bei Wikipedia"]))}</p></section>`;
 }
 
 // The other player left the online game.
