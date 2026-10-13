@@ -22,6 +22,7 @@ refreshes it after each merge.
 ## Conventions
 - UI: responsive design (mobile phone portrait up to desktop; table and cards must fit and be tappable on a small screen). Make it pretty and a bit playful: warm colors, friendly rounded shapes, small lively touches (hover/tap feedback, gentle transitions), while keeping it readable and accessible (contrast, focus states, `prefers-reduced-motion`).
 - Deploy: GitHub Pages (https://rokde.github.io/kartenspiele/) via `.github/workflows/pages.yml` on every push to `main`; the orchestrator pushes `main` to `origin` after each merge (never force-push).
+- Offline/PWA: `manifest.webmanifest` + `assets/icons/`, service worker `sw.js` (precache list and version are written into `_site/sw.js` by `scripts/cache-bust.js` at deploy; the repo copy stays in `"dev"` mode and caches nothing). A new top-level site file must be added to the copy step in `pages.yml`.
 - UI language: German. Code, comments, commits: English, Conventional Commits.
 
 ## Factory rules
