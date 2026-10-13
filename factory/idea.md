@@ -60,3 +60,6 @@ Coordinator measurements (decoded in Chromium, threshold 5 % of peak): card-play
 
 Coordinator measurements on Pages after S21/S22: at 375x812 the page is about 1100 px high (own row starts at y≈734, so the own cards are mostly below the fold, and a big empty trick area of ~136 px plus status sits between the rows). At 1280x800 the page is about 1170 px high, own row starts at y≈798, both rows use only ~360 px of the 1280 px width.
 Design decision (coordinator, user asked "designen"): split by screen. Wide screens go back to 8 stacks in one line, with the card size taken from the screen height so the whole table fits. Phones get an asymmetric table: the opponent row is a compact single line of 8 (only needs to be readable), the own row stays 4x2 with big cards (needs to be tapped). Less empty space everywhere, so the whole table fits one screen without scrolling.
+
+## Feedback 8 (2026-10-13, via /factory:run)
+"kannst du jetzt ein weiteres Kartenspiel hinzufügen? Wie wäre es mit dem richtigen Skat. Dazu braucht man 3 Spieler. Es sollte 2 Computergegner geben und auch das Multiplayer spiel sollte möglich sein. Animationen und Sounds wie im Offiziersskat."
