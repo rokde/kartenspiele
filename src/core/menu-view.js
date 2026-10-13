@@ -74,11 +74,17 @@ export function renderLeft() {
     `<button type="button" class="game-button" data-action="back">Zum Menü</button></div>`;
 }
 
+const confirmNew = `<div class="leave-notice confirm-new" role="alertdialog" aria-labelledby="confirm-new-text">` +
+  `<p id="confirm-new-text" class="leave-notice__text">Neues Spiel starten? Die Spielliste wird gelöscht.</p>` +
+  `<p class="confirm-new__actions"><button type="button" class="game-button" data-action="new-confirm">Neues Spiel starten</button>` +
+  `<button type="button" class="back-button" data-action="new-cancel">Abbrechen</button></p></div>`;
+
 // An online game has no restart and no rules page, so its bar has only "Zurück".
-// With `left`, the game shows the leave notice above the table.
+// With `left`, the game shows the leave notice above the table. With `confirmNew`, it asks before a restart.
 export function renderGameScreen(game, state, options = {}) {
   return `<div class="screen-bar"><button type="button" class="back-button" data-action="back">Zurück</button>` +
     (options.online ? "" : `<button type="button" class="back-button" data-action="rules">Regeln</button>` +
     `<button type="button" class="back-button" data-action="new">Neues Spiel</button>`) + `</div>` +
+    (options.confirmNew && !options.online ? confirmNew : "") +
     `<section class="game-screen">${options.left ? renderLeft() : ""}${game.render(state, options)}</section>`;
 }

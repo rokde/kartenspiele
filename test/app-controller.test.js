@@ -266,6 +266,7 @@ test("S20 AC-6: a new run and leaving the game screen pause the sound and leave 
   assert.deepEqual(log, [["play", deal]]);
   assert.equal(t.clock.pending(300), 1);
   await t.click('data-action="new"');
+  await t.click('data-action="new-confirm"');
   assert.deepEqual(log, [["play", deal], ["pause", deal], ["play", deal]]);
   assert.equal(t.clock.pending(300), 1);
   await t.click('data-action="back"');
@@ -286,4 +287,46 @@ test("S21: the own row scrolls into view only when the turn of the player starts
   assert.equal(t.scrolls.length, 2);
   while (stateIn(t.storage).turn === "computer") await t.clock.tick(800);
   assert.equal(t.scrolls.length, 3);
+});
+
+test("S22: Neues Spiel asks first, stops the computer, and Abbrechen changes nothing", async () => {
+  const t = setup();
+  await computerPause(t);
+  const before = t.storage.getItem(KEY);
+  await t.click('data-action="new"');
+  assert.match(t.app.innerHTML, /role="alertdialog"/);
+  assert.equal(t.clock.pending(800), 0, "the computer waits behind the question");
+  assert.equal(t.storage.getItem(KEY), before);
+  await t.click('data-action="new-cancel"');
+  assert.doesNotMatch(t.app.innerHTML, /role="alertdialog"/);
+  assert.equal(t.storage.getItem(KEY), before);
+  assert.equal(t.clock.pending(800), 1, "the game goes on");
+});
+
+test("S22 round 1: card and announce clicks do nothing while the question shows", async () => {
+  const t = setup();
+  await t.click('data-game-id="offiziersskat"');
+  await t.click('data-action="new"');
+  const before = t.storage.getItem(KEY);
+  await t.click("data-announce=");
+  assert.equal(t.storage.getItem(KEY), before);
+  await t.click('data-action="new-cancel"');
+  await t.click("data-announce=");
+  await t.click('data-action="new"');
+  const played = t.storage.getItem(KEY);
+  await t.click("data-stack=");
+  assert.equal(t.storage.getItem(KEY), played);
+  assert.equal(t.clock.timers.size, 0, "no computer turn starts");
+  assert.match(t.app.innerHTML, /role="alertdialog"/);
+});
+
+test("S22: Neues Spiel starten saves a new game with an empty score list", async () => {
+  const scores = [{ human: 70, computer: 50 }];
+  const storage = memoryStorage();
+  save(storage, "offiziersskat", game.newGame(3, "human", scores));
+  const t = setup({ storage });
+  await t.click('data-action="new"');
+  await t.click('data-action="new-confirm"');
+  assert.doesNotMatch(t.app.innerHTML, /role="alertdialog"/);
+  assert.deepEqual(stateIn(t.storage), game.newGame(7, "computer", []));
 });
